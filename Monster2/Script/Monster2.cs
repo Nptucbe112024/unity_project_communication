@@ -18,8 +18,17 @@ public class Monster2 : MonoBehaviour {
     private float detectTimer = 0f;  
     private bool isDetected = false;
 
-    // 定義狀態對應的 Integer 數值
-    // 請檢查 Animator 箭頭上的 Conditions 是否對應這些數字
+    [Header("音效設定")]
+    public AudioSource audioSource;
+    public AudioClip wanderSound;   // 走路/巡邏聲
+    public AudioClip spottedSound;  // 突然發現玩家（照到光）的叫聲
+    public AudioClip chaseSound;    // 追逐時的急促聲
+    public AudioClip attackSound;   // 攻擊聲
+
+    private int lastState = -1;     // 紀錄上一個狀態，防止重複執行
+    private bool hasPlayedSpotted = false; // 確保被照到時的尖叫只播一次
+
+    // 狀態常數
     private const int IDLE = 0;
     private const int WALK = 1;
     private const int RUN = 2;
@@ -28,18 +37,23 @@ public class Monster2 : MonoBehaviour {
     void Start () {
         anim = GetComponent<Animator>();
         agent = GetComponent<NavMeshAgent>();
-        // 防止旋轉衝突，讓 NavMeshAgent 處理轉向
         agent.updateRotation = true; 
+
+        // 自動抓取 AudioSource 如果沒拉的話
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
     }
     
     void Update () {
+        // 安全檢查
+        if (agent == null || !agent.isOnNavMesh) return;
+
         // 計時器邏輯
         if (detectTimer > 0) {
             isDetected = true;
             detectTimer -= Time.deltaTime;
         } else {
             isDetected = false;
-            
+            hasPlayedSpotted = false; // 失去目標後重置尖叫開關
         }
 
         // 核心 AI 切換
@@ -50,7 +64,6 @@ public class Monster2 : MonoBehaviour {
         }
     }
 
-    // 由手電筒腳本遠端呼叫
     public void BeIlluminated() {
         detectTimer = calmDownTime;
     }
@@ -59,14 +72,11 @@ public class Monster2 : MonoBehaviour {
         float distance = Vector3.Distance(transform.position, player.position);
         
         if (distance > attackRange) {
-            // 追逐玩家
             agent.isStopped = false;
             agent.speed = runSpeed;
             agent.SetDestination(player.position);
-            
             UpdateAnimation(RUN);
         } else {
-            // 進入攻擊
             Attack();
         }
     }
@@ -75,13 +85,11 @@ public class Monster2 : MonoBehaviour {
         agent.isStopped = true;
         agent.velocity = Vector3.zero;
         
-        // 攻擊時強制轉向玩家
         Vector3 targetDir = player.position - transform.position;
-        targetDir.y = 0; // 保持水平旋轉
+        targetDir.y = 0;
         if (targetDir != Vector3.zero) {
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(targetDir), Time.deltaTime * 10f);
         }
-
         UpdateAnimation(ATTACK);
     }
 
@@ -89,29 +97,59 @@ public class Monster2 : MonoBehaviour {
         agent.isStopped = false;
         agent.speed = walkSpeed;
 
-        // 簡單的巡邏：如果沒路徑或快走到了，就換一個點
         if (!agent.hasPath || agent.remainingDistance < 0.5f) {
              Vector3 randomDest = transform.position + new Vector3(Random.Range(-10, 10), 0, Random.Range(-10, 10));
              agent.SetDestination(randomDest);
         }
-
         UpdateAnimation(WALK);
     }
 
     void UpdateAnimation(int stateValue) {
-        // 同步更新你所有的 Animator 參數
-        anim.SetInteger("state", stateValue);
+        // 如果狀態沒變，就直接跳過，不重複執行動畫和音效邏輯
+        if (stateValue == lastState) return;
+        lastState = stateValue;
 
-        // 根據 stateValue (0:Idle, 1:Walk, 2:Run, 3:Attack) 分別設定對應參數
+        // --- 音效處理邏輯 ---
+        HandleSound(stateValue);
+
+        // --- 動畫處理邏輯 ---
+        anim.SetInteger("state", stateValue);
         anim.SetInteger("moving", (stateValue == 1) ? 1 : 0);
         anim.SetInteger("run",    (stateValue == 2) ? 1 : 0);
         anim.SetInteger("attack", (stateValue == 3) ? 1 : 0);
-        
-        // 如果 state 為 0 (Idle)，確保其他所有動畫參數都回歸 0
-        if (stateValue == 0) {
-            anim.SetInteger("moving", 0);
-            anim.SetInteger("run", 0);
-            anim.SetInteger("attack", 0);
+    }
+
+    void HandleSound(int state) {
+        if (audioSource == null) return;
+
+        switch (state) {
+            case WALK:
+                audioSource.clip = wanderSound;
+                audioSource.loop = true;
+                audioSource.Play();
+                break;
+
+            case RUN:
+                // 照到光瞬間尖叫 (只播一次)
+                if (!hasPlayedSpotted && spottedSound != null) {
+                    audioSource.PlayOneShot(spottedSound);
+                    hasPlayedSpotted = true;
+                }
+                // 切換成追逐持續音
+                audioSource.clip = chaseSound;
+                audioSource.loop = true;
+                audioSource.Play();
+                break;
+
+            case ATTACK:
+                if (attackSound != null) {
+                    audioSource.PlayOneShot(attackSound);
+                }
+                break;
+
+            case IDLE:
+                audioSource.Stop();
+                break;
         }
     }
 }
