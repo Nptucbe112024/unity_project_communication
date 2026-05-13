@@ -15,15 +15,16 @@ public class MonsterAI : MonoBehaviour
     public bool isFrozen = false;
 
     [Header("Audio")]
-    public AudioSource audioSource;
-    public AudioClip detectSound;
+    public AudioSource footstepSource; // 腳步聲
+    public AudioSource sfxSource;      // 攻擊音效
+
+    public AudioClip footstepSound;
     public AudioClip attackSound;
 
     private NavMeshAgent agent;
     private Animator animator;
 
-    private bool hasDetectedPlayer = false; // 防止一直重播 detect sound
-    private bool isAttackingNow = false;    // 防止 attack sound 每幀播放
+    private bool isAttackingNow = false;
 
     void Start()
     {
@@ -39,9 +40,12 @@ public class MonsterAI : MonoBehaviour
             }
         }
 
-        if (audioSource == null)
+        // 腳步聲初始化
+        if (footstepSource != null)
         {
-            audioSource = GetComponent<AudioSource>();
+            footstepSource.clip = footstepSound;
+            footstepSource.loop = true;
+            footstepSource.playOnAwake = false;
         }
     }
 
@@ -55,17 +59,15 @@ public class MonsterAI : MonoBehaviour
         // ===== Frozen =====
         if (isFrozen)
         {
-            agent.isStopped = true;
-            agent.velocity = Vector3.zero;
-            agent.ResetPath();
+            StopMovement();
 
             animator.SetBool("isFrozen", true);
             animator.SetBool("isMoving", false);
             animator.SetBool("isAttacking", false);
 
-            hasDetectedPlayer = false;
-            isAttackingNow = false;
+            StopFootsteps();
 
+            isAttackingNow = false;
             return;
         }
 
@@ -74,39 +76,30 @@ public class MonsterAI : MonoBehaviour
         // ===== 不在範圍 =====
         if (distance > detectionDistance)
         {
-            agent.isStopped = true;
-            agent.velocity = Vector3.zero;
-            agent.ResetPath();
+            StopMovement();
 
             animator.SetBool("isMoving", false);
             animator.SetBool("isAttacking", false);
 
-            hasDetectedPlayer = false;
+            StopFootsteps();
+
             isAttackingNow = false;
-
             return;
-        }
-
-        // ===== 第一次發現玩家 → 播音效 =====
-        if (!hasDetectedPlayer)
-        {
-            PlaySound(detectSound);
-            hasDetectedPlayer = true;
         }
 
         // ===== 攻擊 =====
         if (distance <= attackDistance)
         {
-            agent.isStopped = true;
-            agent.velocity = Vector3.zero;
-            agent.ResetPath();
+            StopMovement();
 
             animator.SetBool("isMoving", false);
             animator.SetBool("isAttacking", true);
 
+            StopFootsteps();
+
             if (!isAttackingNow)
             {
-                PlaySound(attackSound);
+                PlayAttackSound();
                 isAttackingNow = true;
             }
 
@@ -121,6 +114,8 @@ public class MonsterAI : MonoBehaviour
             animator.SetBool("isMoving", true);
             animator.SetBool("isAttacking", false);
 
+            PlayFootsteps();
+
             isAttackingNow = false;
         }
 
@@ -133,22 +128,51 @@ public class MonsterAI : MonoBehaviour
             if (lookDir.sqrMagnitude > 0.001f)
             {
                 Quaternion targetRot = Quaternion.LookRotation(lookDir);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * 5f);
+                transform.rotation = Quaternion.Slerp(
+                    transform.rotation,
+                    targetRot,
+                    Time.deltaTime * 5f
+                );
             }
+        }
+    }
+
+    void StopMovement()
+    {
+        agent.isStopped = true;
+        agent.velocity = Vector3.zero;
+        agent.ResetPath();
+    }
+
+    void PlayFootsteps()
+    {
+        if (footstepSource != null &&
+            footstepSound != null &&
+            !footstepSource.isPlaying)
+        {
+            footstepSource.Play();
+        }
+    }
+
+    void StopFootsteps()
+    {
+        if (footstepSource != null && footstepSource.isPlaying)
+        {
+            footstepSource.Stop();
+        }
+    }
+
+    void PlayAttackSound()
+    {
+        if (sfxSource != null && attackSound != null)
+        {
+            sfxSource.PlayOneShot(attackSound);
         }
     }
 
     void AttackPlayer()
     {
         // 之後加扣血
-    }
-
-    void PlaySound(AudioClip clip)
-    {
-        if (audioSource != null && clip != null)
-        {
-            audioSource.PlayOneShot(clip);
-        }
     }
 
     public void SetFrozen(bool value)

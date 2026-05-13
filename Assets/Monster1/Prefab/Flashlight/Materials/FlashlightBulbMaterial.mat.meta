@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: 5529a7ac85c90d84db9ac13c6e6fb2c9
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 18972
+  packageName: Flashlight
+  packageVersion: v1.61
+  assetPath: Assets/Flashlight/Materials/FlashlightBulbMaterial.mat
+  uploadId: 243072
