@@ -15,8 +15,8 @@ public class MonsterAI : MonoBehaviour
     public bool isFrozen = false;
 
     [Header("Audio")]
-    public AudioSource footstepSource; // ¸}¨BÁn
-    public AudioSource sfxSource;      // §ðÀ»­µ®Ä
+    public AudioSource footstepSource; // ï¿½}ï¿½Bï¿½n
+    public AudioSource sfxSource;      // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
     public AudioClip footstepSound;
     public AudioClip attackSound;
@@ -40,7 +40,7 @@ public class MonsterAI : MonoBehaviour
             }
         }
 
-        // ¸}¨BÁnªì©l¤Æ
+        // ï¿½}ï¿½Bï¿½nï¿½ï¿½lï¿½ï¿½
         if (footstepSource != null)
         {
             footstepSource.clip = footstepSound;
@@ -73,7 +73,7 @@ public class MonsterAI : MonoBehaviour
 
         animator.SetBool("isFrozen", false);
 
-        // ===== ¤£¦b½d³ò =====
+        // ===== ï¿½ï¿½ï¿½bï¿½dï¿½ï¿½ =====
         if (distance > detectionDistance)
         {
             StopMovement();
@@ -87,7 +87,7 @@ public class MonsterAI : MonoBehaviour
             return;
         }
 
-        // ===== §ðÀ» =====
+        // ===== ï¿½ï¿½ï¿½ï¿½ =====
         if (distance <= attackDistance)
         {
             StopMovement();
@@ -105,7 +105,7 @@ public class MonsterAI : MonoBehaviour
 
             AttackPlayer();
         }
-        // ===== °lÀ» =====
+        // ===== ï¿½lï¿½ï¿½ =====
         else
         {
             agent.isStopped = false;
@@ -119,7 +119,7 @@ public class MonsterAI : MonoBehaviour
             isAttackingNow = false;
         }
 
-        // ===== ­±¦Vª±®a =====
+        // ===== ï¿½ï¿½ï¿½Vï¿½ï¿½ï¿½a =====
         if (distance <= facePlayerDistance)
         {
             Vector3 lookDir = player.position - transform.position;
@@ -146,6 +146,7 @@ public class MonsterAI : MonoBehaviour
 
     void PlayFootsteps()
     {
+        Debug.Log(name + " PlayFootsteps");
         if (footstepSource != null &&
             footstepSound != null &&
             !footstepSource.isPlaying)
@@ -158,6 +159,7 @@ public class MonsterAI : MonoBehaviour
     {
         if (footstepSource != null && footstepSource.isPlaying)
         {
+            Debug.Log(name + " StopFootsteps");
             footstepSource.Stop();
         }
     }
@@ -172,7 +174,7 @@ public class MonsterAI : MonoBehaviour
 
     void AttackPlayer()
     {
-        // ¤§«á¥[¦©¦å
+        // ï¿½ï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½ï¿½
     }
 
     public void SetFrozen(bool value)
@@ -187,6 +189,7 @@ public class MonsterAI : MonoBehaviour
 
     void OnDrawGizmosSelected()
     {
+        return;
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, detectionDistance);
 
