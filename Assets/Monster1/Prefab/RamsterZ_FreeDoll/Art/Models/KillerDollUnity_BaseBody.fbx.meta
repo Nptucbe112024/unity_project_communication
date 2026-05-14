@@ -1,9 +1,31 @@
 fileFormatVersion: 2
 guid: 501dc08816199454c88f2746cfb9c147
+AssetOrigin:
+  serializedVersion: 1
+  productId: 356430
+  packageName: Free Doll Character
+  packageVersion: 1.0
+  assetPath: Assets/RamsterZ_FreeDoll/Art/Models/KillerDollUnity_BaseBody.fbx
+  uploadId: 849456
 ModelImporter:
-  serializedVersion: 22200
+  serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Head
+    second: {fileID: 2100000, guid: 76e391e4862de7f459ef2aa0abf6a11b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: body
+    second: {fileID: 2100000, guid: 4ccd9cff50558c44191d93f3ddcc6eb5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: eyes
+    second: {fileID: 2100000, guid: 5aa8ef89b96545a42a3be0b4d9af21ca, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -16,8 +38,6 @@ ModelImporter:
     optimizeGameObjects: 0
     removeConstantScaleCurves: 0
     motionNodeName: 
-    rigImportErrors: 
-    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
@@ -87,6 +107,9 @@ ModelImporter:
     maxBonesPerVertex: 4
     minBoneWeight: 0.001
     optimizeBones: 1
+    generateMeshLods: 0
+    meshLodGenerationFlags: 0
+    maximumMeshLod: -1
     meshOptimizationFlags: -1
     indexFormat: 0
     secondaryUVAngleDistortion: 8
@@ -591,8 +614,7 @@ ModelImporter:
     - name: ik_hand_r
       parentName: ik_hand_gun
       position: {x: -0, y: 0, z: -0.000000076293944}
-      rotation: {x: -0.00000015553087, y: -0.00000002980232, z: 0.0000000074505753,
-        w: 1}
+      rotation: {x: -0.00000015553087, y: -0.00000002980232, z: 0.0000000074505753, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: pelvis
       parentName: Root
@@ -647,8 +669,7 @@ ModelImporter:
     - name: thigh_twistCor_01_r
       parentName: thigh_twist_01_r
       position: {x: -0, y: 0, z: 0}
-      rotation: {x: -0.0000000021536835, y: 4.011548e-18, z: -0.0000000018626451,
-        w: 1}
+      rotation: {x: -0.0000000021536835, y: 4.011548e-18, z: -0.0000000018626451, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: thigh_twist_02_r
       parentName: thigh_r
@@ -658,8 +679,7 @@ ModelImporter:
     - name: thigh_twistCor_02_r
       parentName: thigh_twist_02_r
       position: {x: -0, y: 0, z: 0}
-      rotation: {x: -0.0000000021536835, y: 4.011548e-18, z: -0.0000000018626451,
-        w: 1}
+      rotation: {x: -0.0000000021536835, y: 4.011548e-18, z: -0.0000000018626451, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: calf_r
       parentName: thigh_r
@@ -689,8 +709,7 @@ ModelImporter:
     - name: calf_twistCor_02_r
       parentName: calf_twist_02_r
       position: {x: -0, y: 0, z: 0}
-      rotation: {x: -0.000000006053596, y: -0.0000000018626449, z: 0.0000000018626449,
-        w: 1}
+      rotation: {x: -0.000000006053596, y: -0.0000000018626449, z: 0.0000000018626449, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: calf_twist_01_r
       parentName: calf_r
@@ -750,8 +769,7 @@ ModelImporter:
     - name: thigh_in_l
       parentName: thigh_correctiveRoot_l
       position: {x: 0.10327446, y: -0.008447506, z: 0.091944486}
-      rotation: {x: -0.0000000069849198, y: -0.0000000018626451, z: -1.3010427e-17,
-        w: 1}
+      rotation: {x: -0.0000000069849198, y: -0.0000000018626451, z: -1.3010427e-17, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: thigh_out_l
       parentName: thigh_correctiveRoot_l
@@ -866,8 +884,7 @@ ModelImporter:
     - name: upperarm_correctiveRoot_l
       parentName: upperarm_l
       position: {x: -0, y: 0.0000000667572, z: 0.000000019073486}
-      rotation: {x: -0.00000070920214, y: -0.00000027567125, z: -0.00000023655608,
-        w: 1}
+      rotation: {x: -0.00000070920214, y: -0.00000027567125, z: -0.00000023655608, w: 1}
       scale: {x: 1.0000002, y: 1.0000001, z: 1.0000001}
     - name: upperarm_in_l
       parentName: upperarm_correctiveRoot_l
@@ -927,8 +944,7 @@ ModelImporter:
     - name: lowerarm_correctiveRoot_l
       parentName: lowerarm_l
       position: {x: -0, y: -0.000000076293944, z: 0.000000019073486}
-      rotation: {x: -0.000000011874323, y: -0.00000016391272, z: 0.00000023655585,
-        w: 1}
+      rotation: {x: -0.000000011874323, y: -0.00000016391272, z: 0.00000023655585, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: lowerarm_bck_l
       parentName: lowerarm_correctiveRoot_l
@@ -1108,8 +1124,7 @@ ModelImporter:
     - name: upperarm_twistCor_01_r
       parentName: upperarm_twist_01_r
       position: {x: -0.000000114440915, y: 0, z: 0}
-      rotation: {x: 0.000000007450581, y: -9.3132235e-10, z: -0.0000000011641529,
-        w: 1}
+      rotation: {x: 0.000000007450581, y: -9.3132235e-10, z: -0.0000000011641529, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: upperarm_twist_02_r
       parentName: upperarm_r
@@ -1119,8 +1134,7 @@ ModelImporter:
     - name: upperarm_twistCor_02_r
       parentName: upperarm_twist_02_r
       position: {x: 0.000000038146972, y: -0.000000076293944, z: 0}
-      rotation: {x: -0.00000008195639, y: -0.000000005587935, z: 0.0000000013969832,
-        w: 1}
+      rotation: {x: -0.00000008195639, y: -0.000000005587935, z: 0.0000000013969832, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: upperarm_tricep_r
       parentName: upperarm_twist_02_r
@@ -1331,10 +1345,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 356430
-  packageName: Free Doll Character
-  packageVersion: 1.0
-  assetPath: Assets/RamsterZ_FreeDoll/Art/Models/KillerDollUnity_BaseBody.fbx
-  uploadId: 849456
