@@ -20,13 +20,40 @@ public class MonsterAI : MonoBehaviour
     [Header("Movement")]
     public NavMeshAgent agent;
 
+    [Header("Animation")]
+    public Animator animator;
+
+    [Header("Sound")]
+    public AudioSource walkAudioSource;
+    public AudioSource sfxAudioSource;
+    public AudioClip walkSound;
+    public AudioClip attackSound;
+
     private bool isStoppedByLight = false;
+    private bool hasPlayedAttackSound = false;
 
     void Start()
     {
         if (agent == null)
         {
             agent = GetComponent<NavMeshAgent>();
+        }
+
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
+        }
+
+        if (walkAudioSource != null)
+        {
+            walkAudioSource.clip = walkSound;
+            walkAudioSource.loop = true;
+            walkAudioSource.playOnAwake = false;
+        }
+
+        if (sfxAudioSource != null)
+        {
+            sfxAudioSource.playOnAwake = false;
         }
     }
 
@@ -36,7 +63,7 @@ public class MonsterAI : MonoBehaviour
 
         if (isStoppedByLight)
         {
-            StopMonster();
+            StopMonsterByLight();
             return;
         }
 
@@ -63,18 +90,15 @@ public class MonsterAI : MonoBehaviour
     {
         float distance = Vector3.Distance(transform.position, player.position);
 
-        // 1. 玩家不在範圍內
         if (distance > detectRange)
         {
             return false;
         }
 
-        // 2. 從怪物眼睛位置往玩家發射射線
         Vector3 origin = transform.position + Vector3.up * 1.5f;
         Vector3 target = player.position + Vector3.up * 1.0f;
         Vector3 direction = target - origin;
 
-        // 3. 如果中間打到牆壁，代表看不到玩家
         if (Physics.Raycast(origin, direction.normalized, distance, obstacleLayer))
         {
             return false;
@@ -90,7 +114,6 @@ public class MonsterAI : MonoBehaviour
             return false;
         }
 
-        // 手電筒沒開就不會停止怪物
         if (!flashlightLight.enabled)
         {
             return false;
@@ -101,13 +124,11 @@ public class MonsterAI : MonoBehaviour
 
         float distanceToMonster = directionToMonster.magnitude;
 
-        // 超出手電筒照射距離
         if (distanceToMonster > flashlightLight.range)
         {
             return false;
         }
 
-        // 判斷怪物是否在手電筒照射角度內
         float angle = Vector3.Angle(flashlight.forward, directionToMonster);
 
         if (angle > flashlightStopAngle)
@@ -115,7 +136,6 @@ public class MonsterAI : MonoBehaviour
             return false;
         }
 
-        // 判斷手電筒與怪物之間有沒有牆壁
         if (Physics.Raycast(flashlight.position, directionToMonster.normalized, out RaycastHit hit, distanceToMonster))
         {
             if (hit.transform != transform && !hit.transform.IsChildOf(transform))
@@ -131,12 +151,33 @@ public class MonsterAI : MonoBehaviour
     {
         agent.isStopped = false;
         agent.SetDestination(player.position);
+
+        PlayWalkSound();
+
+        hasPlayedAttackSound = false;
+
+        if (animator != null)
+        {
+            animator.SetBool("IsLit", false);
+            animator.SetBool("IsWalking", true);
+            animator.SetBool("IsAttacking", false);
+        }
     }
 
-    void StopMonster()
+    void StopMonsterByLight()
     {
         agent.isStopped = true;
         agent.velocity = Vector3.zero;
+
+        StopWalkSound();
+        hasPlayedAttackSound = false;
+
+        if (animator != null)
+        {
+            animator.SetBool("IsLit", true);
+            animator.SetBool("IsWalking", false);
+            animator.SetBool("IsAttacking", false);
+        }
     }
 
     void AttackPlayer()
@@ -144,8 +185,22 @@ public class MonsterAI : MonoBehaviour
         agent.isStopped = true;
         agent.velocity = Vector3.zero;
 
+        StopWalkSound();
+
+        if (!hasPlayedAttackSound)
+        {
+            PlayAttackSound();
+            hasPlayedAttackSound = true;
+        }
+
+        if (animator != null)
+        {
+            animator.SetBool("IsLit", false);
+            animator.SetBool("IsWalking", false);
+            animator.SetBool("IsAttacking", true);
+        }
+
         Debug.Log("Attack Player");
-        // 這裡之後可以放扣血、播放攻擊動畫
     }
 
     void Idle()
@@ -153,7 +208,42 @@ public class MonsterAI : MonoBehaviour
         agent.isStopped = true;
         agent.velocity = Vector3.zero;
 
-        // 這裡之後可以改成巡邏
+        StopWalkSound();
+        hasPlayedAttackSound = false;
+
+        if (animator != null)
+        {
+            animator.SetBool("IsLit", false);
+            animator.SetBool("IsWalking", false);
+            animator.SetBool("IsAttacking", false);
+        }
+    }
+
+    void PlayWalkSound()
+    {
+        if (walkAudioSource != null && walkSound != null)
+        {
+            if (!walkAudioSource.isPlaying)
+            {
+                walkAudioSource.Play();
+            }
+        }
+    }
+
+    void StopWalkSound()
+    {
+        if (walkAudioSource != null && walkAudioSource.isPlaying)
+        {
+            walkAudioSource.Stop();
+        }
+    }
+
+    void PlayAttackSound()
+    {
+        if (sfxAudioSource != null && attackSound != null)
+        {
+            sfxAudioSource.PlayOneShot(attackSound);
+        }
     }
 
     void OnDrawGizmosSelected()
