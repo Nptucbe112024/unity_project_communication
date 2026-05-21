@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  m_SkyboxMaterial: {fileID: 0}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -506,6 +506,34 @@ MonoBehaviour:
   monsterLayer:
     serializedVersion: 2
     m_Bits: 64
+--- !u!1 &1448324528 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2994704359952037799, guid: 93c894ebfac27404d9d676fe45635480, type: 3}
+  m_PrefabInstance: {fileID: 1642862886}
+  m_PrefabAsset: {fileID: 0}
+--- !u!136 &1448324535
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1448324528}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.92673165
+  m_Height: 2.1590955
+  m_Direction: 1
+  m_Center: {x: -4.695273e-17, y: 1.0993031, z: -0.018752396}
 --- !u!1001 &1642862886
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -565,7 +593,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2994704359952037799, guid: 93c894ebfac27404d9d676fe45635480, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1448324535}
   m_SourcePrefab: {fileID: 100100000, guid: 93c894ebfac27404d9d676fe45635480, type: 3}
 --- !u!1 &1708880416
 GameObject:
@@ -583,7 +614,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!108 &1708880417
 Light:
   m_ObjectHideFlags: 0
