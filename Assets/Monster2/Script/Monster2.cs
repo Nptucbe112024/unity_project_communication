@@ -90,6 +90,17 @@ public class Monster2 : MonoBehaviour {
         if (targetDir != Vector3.zero) {
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(targetDir), Time.deltaTime * 10f);
         }
+
+        if (player != null)
+        {
+            // 從玩家（或其子物件）身上尋找 UltimateFlashlightController 腳本
+            FlashlightController flashlight = player.GetComponentInChildren<FlashlightController>();
+            if (flashlight != null)
+            {
+                flashlight.TurnOffFlashlight();
+            }
+        }
+
         UpdateAnimation(ATTACK);
     }
 

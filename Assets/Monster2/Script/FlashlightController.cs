@@ -75,4 +75,18 @@ public class FlashlightController : MonoBehaviour
         Gizmos.DrawRay(transform.position, transform.forward * detectRange);
         Gizmos.DrawWireSphere(transform.position + transform.forward * detectRange, lightRadius);
     }
+
+    // 【新增】提供給怪物呼叫的強制關燈功能
+    public void TurnOffFlashlight()
+    {
+        if (isOn) // 如果本來是開著的才執行關閉
+        {
+            isOn = false;
+            if (_lightSource != null)
+            {
+                _lightSource.enabled = false;
+                Debug.Log("怪物關了你的燈");
+            }
+        }
+    }
 }
