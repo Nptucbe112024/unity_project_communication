@@ -13,6 +13,10 @@ public class Monster2 : MonoBehaviour {
     public float runSpeed = 5.5f;
     public float attackRange = 2.2f; 
 
+    [Header("攻擊命中設定")]
+    public float hitRange = 2.5f;        // 【新增】真正揮爪時能打到玩家的極限距離
+    public float hitAngle = 60f;         // 【新增】真正揮爪時能打到玩家的角度扇形範圍（度）
+
     [Header("狀態冷靜時間")]
     public float calmDownTime = 3.0f; 
     private float detectTimer = 0f;  
@@ -39,24 +43,20 @@ public class Monster2 : MonoBehaviour {
         agent = GetComponent<NavMeshAgent>();
         agent.updateRotation = true; 
 
-        // 自動抓取 AudioSource 如果沒拉的話
         if (audioSource == null) audioSource = GetComponent<AudioSource>();
     }
     
     void Update () {
-        // 安全檢查
         if (agent == null || !agent.isOnNavMesh) return;
 
-        // 計時器邏輯
         if (detectTimer > 0) {
             isDetected = true;
             detectTimer -= Time.deltaTime;
         } else {
             isDetected = false;
-            hasPlayedSpotted = false; // 失去目標後重置尖叫開關
+            hasPlayedSpotted = false; 
         }
 
-        // 核心 AI 切換
         if (isDetected) {
             ChaseAndAttack();
         } else {
@@ -91,18 +91,37 @@ public class Monster2 : MonoBehaviour {
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(targetDir), Time.deltaTime * 10f);
         }
 
-        // 【修改邏輯】當怪物攻擊時，通知手電筒在 1 秒後關閉
-        if (player != null)
-        {
-            UltimateFlashlightController flashlight = player.GetComponentInChildren<UltimateFlashlightController>();
-            if (flashlight != null)
-            {
-                // 傳入 1.0f 代表延遲 1 秒，如果想改 0.5 秒或 2 秒直接改這個數字即可
-                flashlight.TurnOffFlashlightWithDelay(1.0f);
-            }
-        }
-
         UpdateAnimation(ATTACK);
+    }
+
+    // ====================================================================
+    // 【核心新增】由「動畫事件 (Animation Event)」在怪物揮下爪子的精準瞬間呼叫
+    // ====================================================================
+    public void OnAttackHit() {
+        if (player == null) return;
+
+        // 1. 計算當前玩家跟怪物的距離
+        float distance = Vector3.Distance(transform.position, player.position);
+
+        // 2. 計算玩家是否在怪物的正前方扇形範圍內（防止玩家繞背躲開）
+        Vector3 dirToPlayer = (player.position - transform.position).normalized;
+        float angle = Vector3.Angle(transform.forward, dirToPlayer);
+
+        // 3. 【準確命中判斷】：只有距離夠近、且角度在前方，才算真正打中玩家！
+        if (distance <= hitRange && angle <= (hitAngle / 2f)) {
+            
+            Debug.Log("💥 怪物精準命中玩家！手電筒即將關閉！");
+
+            // 這裡可以執行玩家扣血，例如：player.GetComponent<PlayerHealth>().TakeDamage(20);
+
+            // 呼叫手電筒腳本，開始延遲 1 秒熄滅的處理
+            UltimateFlashlightController flashlight = player.GetComponentInChildren<UltimateFlashlightController>();
+            if (flashlight != null) {
+                flashlight.RequestTurnOff();
+            }
+        } else {
+            Debug.Log("💨 玩家成功走位，躲開了怪物的攻擊！");
+        }
     }
 
     void Patrol() {
@@ -117,14 +136,11 @@ public class Monster2 : MonoBehaviour {
     }
 
     void UpdateAnimation(int stateValue) {
-        // 如果狀態沒變，就直接跳過，不重複執行動畫和音效邏輯
         if (stateValue == lastState) return;
         lastState = stateValue;
 
-        // --- 音效處理邏輯 ---
         HandleSound(stateValue);
 
-        // --- 動畫處理邏輯 ---
         anim.SetInteger("state", stateValue);
         anim.SetInteger("moving", (stateValue == 1) ? 1 : 0);
         anim.SetInteger("run",    (stateValue == 2) ? 1 : 0);
@@ -142,12 +158,10 @@ public class Monster2 : MonoBehaviour {
                 break;
 
             case RUN:
-                // 照到光瞬間尖叫 (只播一次)
                 if (!hasPlayedSpotted && spottedSound != null) {
                     audioSource.PlayOneShot(spottedSound);
                     hasPlayedSpotted = true;
                 }
-                // 切換成追逐持續音
                 audioSource.clip = chaseSound;
                 audioSource.loop = true;
                 audioSource.Play();
