@@ -91,13 +91,14 @@ public class Monster2 : MonoBehaviour {
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(targetDir), Time.deltaTime * 10f);
         }
 
+        // 【修改邏輯】當怪物攻擊時，通知手電筒在 1 秒後關閉
         if (player != null)
         {
-            // 從玩家（或其子物件）身上尋找 UltimateFlashlightController 腳本
-            FlashlightController flashlight = player.GetComponentInChildren<FlashlightController>();
+            UltimateFlashlightController flashlight = player.GetComponentInChildren<UltimateFlashlightController>();
             if (flashlight != null)
             {
-                flashlight.TurnOffFlashlight();
+                // 傳入 1.0f 代表延遲 1 秒，如果想改 0.5 秒或 2 秒直接改這個數字即可
+                flashlight.TurnOffFlashlightWithDelay(1.0f);
             }
         }
 

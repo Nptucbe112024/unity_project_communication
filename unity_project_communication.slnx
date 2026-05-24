@@ -20,6 +20,7 @@
   <Project Path="Unity.VisualStudio.Editor.csproj" />
   <Project Path="Unity.InputSystem.csproj" />
   <Project Path="PPv2URPConverters.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Unity.Searcher.Editor.csproj" />
   <Project Path="UnityEditor.TestRunner.csproj" />
   <Project Path="Unity.VisualScripting.Core.csproj" />
@@ -41,7 +42,6 @@
   <Project Path="Unity.RenderPipelines.Universal.2D.Editor.Overrides.csproj" />
   <Project Path="Unity.AI.Navigation.Editor.csproj" />
   <Project Path="Unity.Multiplayer.Center.Common.csproj" />
-  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Unity.InputSystem.ForUI.csproj" />
   <Project Path="Unity.AI.Navigation.csproj" />
   <Project Path="Unity.Collections.CodeGen.csproj" />

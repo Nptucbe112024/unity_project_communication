@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections; // 【必須引入】使用協程需要這個命名空間
 
 [RequireComponent(typeof(Light))]
 public class UltimateFlashlightController : MonoBehaviour
@@ -8,9 +9,9 @@ public class UltimateFlashlightController : MonoBehaviour
     public bool isOn = false;             
 
     [Header("偵測設定")]
-    public float detectRange = 25f;       // 手電筒射程
-    public float lightRadius = 3f;        // 光圈偵測寬度 (SphereCast 半徑)
-    public LayerMask monsterLayer;        // 請在 Inspector 選擇 "Monster" 層級
+    public float detectRange = 25f;       
+    public float lightRadius = 3f;        
+    public LayerMask monsterLayer;        
 
     [Header("音效設定")]
     public AudioSource audioSource;
@@ -21,48 +22,55 @@ public class UltimateFlashlightController : MonoBehaviour
 
     void Start()
     {
-        // 自動取得同物件上的 Light 組件
         _lightSource = GetComponent<Light>();
-        
-        // 初始狀態同步
-        if (_lightSource != null)
-        {
-            _lightSource.enabled = isOn;
-        }
-
-        // 如果沒綁定 AudioSource，嘗試從自身或子物件取得
-        if (audioSource == null)
-        {
-            audioSource = GetComponent<AudioSource>();
-        }
+        if (_lightSource != null) _lightSource.enabled = isOn;
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
     }
 
     void Update()
     {
-        // 開關手電筒
-        if (Input.GetKeyDown(toggleKey))
-        {
-            ToggleFlashlight();
-        }
-
-        // 當手電筒開啟時，持續偵測前方是否有怪物
-        if (isOn)
-        {
-            ScanForMonster();
-        }
+        if (Input.GetKeyDown(toggleKey)) ToggleFlashlight();
+        if (isOn) ScanForMonster();
     }
 
     void ToggleFlashlight()
     {
         isOn = !isOn;
-        
-        if (_lightSource != null)
-        {
-            _lightSource.enabled = isOn;
-        }
-
-        // 播放對應音效
+        if (_lightSource != null) _lightSource.enabled = isOn;
         PlayToggleSound();
+    }
+
+    // 【修改】提供給外部呼叫的延遲關燈啟動器
+    public void TurnOffFlashlightWithDelay(float delayTime)
+    {
+        if (isOn)
+        {
+            // 啟動協程來處理延遲
+            StartCoroutine(DelayTurnOffRoutine(delayTime));
+        }
+    }
+
+    // 【新增】實際執行動態延遲的協程
+    private IEnumerator DelayTurnOffRoutine(float delayTime)
+    {
+        // 程式走到這邊後，會在這裡停頓指定的秒數（例如 1 秒），期間遊戲其他東西照常運作
+        yield return new WaitForSeconds(delayTime);
+
+        // 再次確認手電筒是否還是開著的（防止玩家中途自己先關了）
+        if (isOn)
+        {
+            isOn = false;
+            if (_lightSource != null)
+            {
+                _lightSource.enabled = false;
+            }
+            
+            // 播放關燈音效
+            if (audioSource != null && turnOffSound != null)
+            {
+                audioSource.PlayOneShot(turnOffSound);
+            }
+        }
     }
 
     void PlayToggleSound()
@@ -70,37 +78,17 @@ public class UltimateFlashlightController : MonoBehaviour
         if (audioSource != null)
         {
             AudioClip clipToPlay = isOn ? turnOnSound : turnOffSound;
-            if (clipToPlay != null)
-            {
-                audioSource.PlayOneShot(clipToPlay);
-            }
+            if (clipToPlay != null) audioSource.PlayOneShot(clipToPlay);
         }
     }
 
     void ScanForMonster()
     {
         RaycastHit hit;
-        
-        // 使用 SphereCast 模擬錐形光束偵測
         if (Physics.SphereCast(transform.position, lightRadius, transform.forward, out hit, detectRange, monsterLayer))
         {
-            // 嘗試取得碰撞到的物件上的 Monster2 腳本
             Monster2 monster = hit.collider.GetComponent<Monster2>();
-            
-            if (monster != null)
-            {
-                // 呼叫怪物腳本中的 public 方法
-                monster.BeIlluminated(); 
-                Debug.Log("成功照到怪物：" + hit.collider.name);
-            }
+            if (monster != null) monster.BeIlluminated(); 
         }
-    }
-
-    // 在 Scene 視窗畫出偵測範圍 (方便 Debug)
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawRay(transform.position, transform.forward * detectRange);
-        Gizmos.DrawWireSphere(transform.position + transform.forward * detectRange, lightRadius);
     }
 }
