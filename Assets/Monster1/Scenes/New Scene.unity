@@ -736,6 +736,14 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1104893545}
     - target: {fileID: 963927344663494039, guid: 5be7a6959bf0b31418bc0272b100f9bb, type: 3}
+      propertyPath: attackRange
+      value: 2.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 963927344663494039, guid: 5be7a6959bf0b31418bc0272b100f9bb, type: 3}
+      propertyPath: detectRange
+      value: 7.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 963927344663494039, guid: 5be7a6959bf0b31418bc0272b100f9bb, type: 3}
       propertyPath: flashlightLight
       value: 
       objectReference: {fileID: 1104893546}

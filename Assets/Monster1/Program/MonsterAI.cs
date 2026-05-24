@@ -15,10 +15,14 @@ public class MonsterAI : MonoBehaviour
     public Transform flashlight;
     public Light flashlightLight;
     public float flashlightStopAngle = 20f;
-    public LayerMask monsterLayer;
 
     [Header("Movement")]
     public NavMeshAgent agent;
+    public float rotateSpeed = 8f;
+
+    [Header("Attack")]
+    public float attackCooldown = 1.5f;
+    private float attackTimer = 0f;
 
     [Header("Animation")]
     public Animator animator;
@@ -30,9 +34,44 @@ public class MonsterAI : MonoBehaviour
     public AudioClip attackSound;
 
     private bool isStoppedByLight = false;
-    private bool hasPlayedAttackSound = false;
 
     void Start()
+    {
+        InitComponents();
+        InitAudio();
+    }
+
+    void Update()
+    {
+        attackTimer -= Time.deltaTime;
+
+        isStoppedByLight = IsHitByFlashlight();
+
+        if (isStoppedByLight)
+        {
+            StopMonsterByLight();
+            return;
+        }
+
+        if (!CanSeePlayer())
+        {
+            Idle();
+            return;
+        }
+
+        float distance = Vector3.Distance(transform.position, player.position);
+
+        if (distance <= attackRange)
+        {
+            AttackPlayer();
+        }
+        else
+        {
+            ChasePlayer();
+        }
+    }
+
+    void InitComponents()
     {
         if (agent == null)
         {
@@ -43,7 +82,10 @@ public class MonsterAI : MonoBehaviour
         {
             animator = GetComponentInChildren<Animator>();
         }
+    }
 
+    void InitAudio()
+    {
         if (walkAudioSource != null)
         {
             walkAudioSource.clip = walkSound;
@@ -57,37 +99,13 @@ public class MonsterAI : MonoBehaviour
         }
     }
 
-    void Update()
-    {
-        isStoppedByLight = IsHitByFlashlight();
-
-        if (isStoppedByLight)
-        {
-            StopMonsterByLight();
-            return;
-        }
-
-        if (CanSeePlayer())
-        {
-            float distance = Vector3.Distance(transform.position, player.position);
-
-            if (distance <= attackRange)
-            {
-                AttackPlayer();
-            }
-            else
-            {
-                ChasePlayer();
-            }
-        }
-        else
-        {
-            Idle();
-        }
-    }
-
     bool CanSeePlayer()
     {
+        if (player == null)
+        {
+            return false;
+        }
+
         float distance = Vector3.Distance(transform.position, player.position);
 
         if (distance > detectRange)
@@ -121,7 +139,6 @@ public class MonsterAI : MonoBehaviour
 
         Vector3 monsterPoint = transform.position + Vector3.up * 1.2f;
         Vector3 directionToMonster = monsterPoint - flashlight.position;
-
         float distanceToMonster = directionToMonster.magnitude;
 
         if (distanceToMonster > flashlightLight.range)
@@ -136,7 +153,11 @@ public class MonsterAI : MonoBehaviour
             return false;
         }
 
-        if (Physics.Raycast(flashlight.position, directionToMonster.normalized, out RaycastHit hit, distanceToMonster))
+        if (Physics.Raycast(
+            flashlight.position,
+            directionToMonster.normalized,
+            out RaycastHit hit,
+            distanceToMonster))
         {
             if (hit.transform != transform && !hit.transform.IsChildOf(transform))
             {
@@ -149,90 +170,146 @@ public class MonsterAI : MonoBehaviour
 
     void ChasePlayer()
     {
+        if (agent == null || player == null)
+        {
+            return;
+        }
+
         agent.isStopped = false;
         agent.SetDestination(player.position);
 
         PlayWalkSound();
 
-        hasPlayedAttackSound = false;
+        SetAnimation(
+            isLit: false,
+            isWalking: true,
+            isAttacking: false
+        );
+    }
 
-        if (animator != null)
+    void AttackPlayer()
+    {
+        if (agent != null)
         {
-            animator.SetBool("IsLit", false);
-            animator.SetBool("IsWalking", true);
-            animator.SetBool("IsAttacking", false);
+            agent.isStopped = true;
+            agent.velocity = Vector3.zero;
+        }
+
+        StopWalkSound();
+        FacePlayer();
+
+        SetAnimation(
+            isLit: false,
+            isWalking: false,
+            isAttacking: true
+        );
+
+        if (attackTimer <= 0f)
+        {
+            PlayAttackSound();
+
+            if (animator != null)
+            {
+                animator.SetTrigger("AttackTrigger");
+            }
+
+            Debug.Log("Attack Player");
+
+            attackTimer = attackCooldown;
         }
     }
 
     void StopMonsterByLight()
     {
-        agent.isStopped = true;
-        agent.velocity = Vector3.zero;
-
-        StopWalkSound();
-        hasPlayedAttackSound = false;
-
-        if (animator != null)
+        if (agent != null)
         {
-            animator.SetBool("IsLit", true);
-            animator.SetBool("IsWalking", false);
-            animator.SetBool("IsAttacking", false);
+            agent.isStopped = true;
+            agent.velocity = Vector3.zero;
         }
-    }
-
-    void AttackPlayer()
-    {
-        agent.isStopped = true;
-        agent.velocity = Vector3.zero;
 
         StopWalkSound();
 
-        if (!hasPlayedAttackSound)
-        {
-            PlayAttackSound();
-            hasPlayedAttackSound = true;
-        }
-
-        if (animator != null)
-        {
-            animator.SetBool("IsLit", false);
-            animator.SetBool("IsWalking", false);
-            animator.SetBool("IsAttacking", true);
-        }
-
-        Debug.Log("Attack Player");
+        SetAnimation(
+            isLit: true,
+            isWalking: false,
+            isAttacking: false
+        );
     }
 
     void Idle()
     {
-        agent.isStopped = true;
-        agent.velocity = Vector3.zero;
+        if (agent != null)
+        {
+            agent.isStopped = true;
+            agent.velocity = Vector3.zero;
+        }
 
         StopWalkSound();
-        hasPlayedAttackSound = false;
 
-        if (animator != null)
+        SetAnimation(
+            isLit: false,
+            isWalking: false,
+            isAttacking: false
+        );
+    }
+
+    void FacePlayer()
+    {
+        if (player == null)
         {
-            animator.SetBool("IsLit", false);
-            animator.SetBool("IsWalking", false);
-            animator.SetBool("IsAttacking", false);
+            return;
         }
+
+        Vector3 direction = player.position - transform.position;
+        direction.y = 0f;
+
+        if (direction.sqrMagnitude < 0.001f)
+        {
+            return;
+        }
+
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            targetRotation,
+            rotateSpeed * Time.deltaTime
+        );
+    }
+
+    void SetAnimation(bool isLit, bool isWalking, bool isAttacking)
+    {
+        if (animator == null)
+        {
+            return;
+        }
+
+        animator.SetBool("IsLit", isLit);
+        animator.SetBool("IsWalking", isWalking);
+        animator.SetBool("IsAttacking", isAttacking);
     }
 
     void PlayWalkSound()
     {
-        if (walkAudioSource != null && walkSound != null)
+        if (walkAudioSource == null || walkSound == null)
         {
-            if (!walkAudioSource.isPlaying)
-            {
-                walkAudioSource.Play();
-            }
+            return;
+        }
+
+        if (!walkAudioSource.isPlaying)
+        {
+            walkAudioSource.Play();
         }
     }
 
     void StopWalkSound()
     {
-        if (walkAudioSource != null && walkAudioSource.isPlaying)
+        if (walkAudioSource == null)
+        {
+            return;
+        }
+
+        if (walkAudioSource.isPlaying)
         {
             walkAudioSource.Stop();
         }
@@ -240,10 +317,12 @@ public class MonsterAI : MonoBehaviour
 
     void PlayAttackSound()
     {
-        if (sfxAudioSource != null && attackSound != null)
+        if (sfxAudioSource == null || attackSound == null)
         {
-            sfxAudioSource.PlayOneShot(attackSound);
+            return;
         }
+
+        sfxAudioSource.PlayOneShot(attackSound);
     }
 
     void OnDrawGizmosSelected()
