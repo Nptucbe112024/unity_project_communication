@@ -1,63 +1,59 @@
 using UnityEngine;
 using System.Collections; // 必須引入，才能使用協程 (Coroutine)
 
-[RequireComponent(typeof(Light))]
 public class UltimateFlashlightController : MonoBehaviour
 {
     [Header("基本設定")]
-    public KeyCode toggleKey = KeyCode.F; 
-    public bool isOn = false;             
+    public KeyCode toggleKey = KeyCode.F; // 開關手電筒的按鍵
+    public bool isOn = false;             // 目前手電筒是否開啟
+
+    // ====== 【光的部分：直接控制底下的 WhiteLight】 ======
+    [Header("指定光源 (請拖入底下的 WhiteLight)")]
+    public Light _lightSource;            
 
     [Header("攻擊後關燈設定")]
-    public float delayTime = 0.5f;        // 可以在 Inspector 直接修改延遲秒數（預設 1 秒）
-    private Coroutine delayTurnOffCoroutine; // 用來記錄正在執行的倒數，防止重複重疊
-
-    [Header("偵測設定 (適用於發瘋蜘蛛怪 Monster2)")]
-    public float detectRange = 25f;       // 手電筒射程
-    public float lightRadius = 3f;        // 光圈偵測寬度 (SphereCast 半徑)
-    public LayerMask monsterLayer;        // 記得在 Inspector 選擇 "Monster" 層級
+    public float delayTime = 0.5f;        // 被怪物抓到後，延遲關燈的秒數（可在 Inspector 調整）
+    private Coroutine delayTurnOffCoroutine; // 記錄正在執行的倒數，防止重複疊加
 
     [Header("音效設定")]
-    public AudioSource audioSource;
-    public AudioClip turnOnSound;
-    public AudioClip turnOffSound;
-
-    private Light _lightSource;
+    public AudioSource audioSource;       // 播放開關燈音效的組件
+    public AudioClip turnOnSound;        // 開燈音效
+    public AudioClip turnOffSound;       // 關燈音效
 
     void Start()
     {
-        _lightSource = GetComponent<Light>();
+        // 移除原本的 GetComponent<Light>()，這樣就不會再去抓父物件身上那個錯的燈了！
         
         // 初始狀態同步
         if (_lightSource != null)
         {
-            _lightSource.enabled = isOn;
+            _lightSource.enabled = isOn; // 根據初始設定決定子光源一開始是開還是關
         }
 
         if (audioSource == null)
         {
-            audioSource = GetComponent<AudioSource>();
+            audioSource = GetComponent<AudioSource>(); // 自動嘗試取得身上的 AudioSource
         }
     }
 
     void Update()
     {
-        // 按下設定的按鍵開關手電筒
+        // 按下設定的按鍵（預設 F）開關手電筒
         if (Input.GetKeyDown(toggleKey))
         {
             ToggleFlashlight();
         }
 
-        // 當手電筒開啟時，持續偵測前方是否有怪物
-        if (isOn)
-        {
-            ScanForMonster();
-        }
+        // ====== 【全面改版優化：大功告成】 ======
+        // 這裡已經徹底移除原本在第 125 行會導致報白字的 ScanForMonster() 函數與呼叫。
+        // 現在改由兩隻怪物（MonsterAI 與 Monster2）在它們各自的 Update 內，
+        // 透過 IsHitByFlashlight() 雷達去主動判定這盞 _lightSource 的開關狀態、位置與角度。
+        // 這不只消除了 CS1061 的錯誤，更完美達成了您的自主偵測型 AI 規劃！
     }
 
     void ToggleFlashlight()
     {
-        // 如果手電筒被強制關閉的倒數還在跑，玩家此時若手動切換開關，就將倒數取消
+        // 如果手電筒正處於被怪物強行關閉的倒數中，玩家此時若主動按下 F 鍵，就直接取消倒數
         if (delayTurnOffCoroutine != null)
         {
             StopCoroutine(delayTurnOffCoroutine);
@@ -67,7 +63,7 @@ public class UltimateFlashlightController : MonoBehaviour
         isOn = !isOn;
         if (_lightSource != null)
         {
-            _lightSource.enabled = isOn;
+            _lightSource.enabled = isOn; // 控制子光源
         }
 
         // 播放開關燈音效
@@ -78,63 +74,35 @@ public class UltimateFlashlightController : MonoBehaviour
         }
     }
 
-    // ====== 【核心功能】提供給所有怪物 AI 呼叫的統一接口 ======
+    // ====== 統一接口：提供給怪物 AI 攻擊命中玩家時，強行關燈呼叫 ======
     public void RequestTurnOff()
     {
-        // 如果手電筒本來就是關的，就什麼都不做
         if (!isOn) return;
 
-        // 防止多隻怪物同時攻擊，或者同一隻怪連續攻擊導致倒數重複啟動
         if (delayTurnOffCoroutine != null)
         {
             StopCoroutine(delayTurnOffCoroutine);
         }
 
-        // 啟動內部的倒數協程
         delayTurnOffCoroutine = StartCoroutine(DelayTurnOffRoutine());
     }
 
-    // 手電筒內部的延遲關燈協程
+    // 延遲關燈的協程處理
     private IEnumerator DelayTurnOffRoutine()
     {
-        // 讀取上面設定的 delayTime（1秒）
         yield return new WaitForSeconds(delayTime);
 
         if (isOn)
         {
             isOn = false;
-            if (_lightSource != null) _lightSource.enabled = false;
+            if (_lightSource != null) _lightSource.enabled = false; // 關閉子光源
+            
             if (audioSource != null && turnOffSound != null)
             {
                 audioSource.PlayOneShot(turnOffSound);
             }
         }
 
-        delayTurnOffCoroutine = null; // 結束後清空紀錄
-    }
-
-    void ScanForMonster()
-    {
-        RaycastHit hit;
-        
-        // 使用 SphereCast 模擬錐形光束偵測
-        if (Physics.SphereCast(transform.position, lightRadius, transform.forward, out hit, detectRange, monsterLayer))
-        {
-            // 嘗試取得第一隻怪物的組件
-            Monster2 monster = hit.collider.GetComponent<Monster2>();
-            if (monster != null)
-            {
-                monster.BeIlluminated(); 
-                Debug.Log("成功照到蜘蛛怪：" + hit.collider.name);
-            }
-        }
-    }
-
-    // 在 Scene 視窗畫出偵測範圍 (方便 Debug)
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawRay(transform.position, transform.forward * detectRange);
-        Gizmos.DrawWireSphere(transform.position + transform.forward * detectRange, lightRadius);
+        delayTurnOffCoroutine = null; 
     }
 }

@@ -133,12 +133,12 @@ PrefabInstance:
       objectReference: {fileID: 2001520355}
     - target: {fileID: 963927344663494039, guid: 5be7a6959bf0b31418bc0272b100f9bb, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 963927344663494039, guid: 5be7a6959bf0b31418bc0272b100f9bb, type: 3}
       propertyPath: flashlight
       value: 
-      objectReference: {fileID: 932269764}
+      objectReference: {fileID: 1447700430}
     - target: {fileID: 963927344663494039, guid: 5be7a6959bf0b31418bc0272b100f9bb, type: 3}
       propertyPath: flashlightLight
       value: 
@@ -193,15 +193,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7426772908973985818, guid: 5be7a6959bf0b31418bc0272b100f9bb, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 7426772908973985818, guid: 5be7a6959bf0b31418bc0272b100f9bb, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2008446631}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5be7a6959bf0b31418bc0272b100f9bb, type: 3}
 --- !u!1001 &140562005
 PrefabInstance:
@@ -209,7 +206,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 2001520355}
+    m_TransformParent: {fileID: 791448031}
     m_Modifications:
     - target: {fileID: 1002705123656268, guid: d86ca2f4159e6a942abd8dfc52b38395, type: 3}
       propertyPath: m_Name
@@ -221,7 +218,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4777606630871252, guid: d86ca2f4159e6a942abd8dfc52b38395, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.45
+      value: -0.34999996
       objectReference: {fileID: 0}
     - target: {fileID: 4777606630871252, guid: d86ca2f4159e6a942abd8dfc52b38395, type: 3}
       propertyPath: m_LocalPosition.z
@@ -233,15 +230,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4777606630871252, guid: d86ca2f4159e6a942abd8dfc52b38395, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 4777606630871252, guid: d86ca2f4159e6a942abd8dfc52b38395, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.70710677
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 4777606630871252, guid: d86ca2f4159e6a942abd8dfc52b38395, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.70710677
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 4777606630871252, guid: d86ca2f4159e6a942abd8dfc52b38395, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -257,7 +254,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 108038271100546340, guid: d86ca2f4159e6a942abd8dfc52b38395, type: 3}
       propertyPath: m_Enabled
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -266,9 +263,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1002705123656268, guid: d86ca2f4159e6a942abd8dfc52b38395, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1869213932}
-    - targetCorrespondingSourceObject: {fileID: 1175331865632600, guid: d86ca2f4159e6a942abd8dfc52b38395, type: 3}
+    - targetCorrespondingSourceObject: {fileID: 1002705123656268, guid: d86ca2f4159e6a942abd8dfc52b38395, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 965557700}
+      addedObject: {fileID: 1869213933}
   m_SourcePrefab: {fileID: 100100000, guid: d86ca2f4159e6a942abd8dfc52b38395, type: 3}
 --- !u!1 &187256538
 GameObject:
@@ -475,7 +472,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
+    - targetCorrespondingSourceObject: {fileID: 400002, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 932269764}
     m_AddedComponents: []
@@ -572,14 +569,14 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &791448031 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 400002, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
+  m_PrefabInstance: {fileID: 457076259}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &932269764 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4777606630871252, guid: d86ca2f4159e6a942abd8dfc52b38395, type: 3}
-  m_PrefabInstance: {fileID: 140562005}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &965557697 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1175331865632600, guid: d86ca2f4159e6a942abd8dfc52b38395, type: 3}
   m_PrefabInstance: {fileID: 140562005}
   m_PrefabAsset: {fileID: 0}
 --- !u!108 &965557699 stripped
@@ -587,29 +584,11 @@ Light:
   m_CorrespondingSourceObject: {fileID: 108038271100546340, guid: d86ca2f4159e6a942abd8dfc52b38395, type: 3}
   m_PrefabInstance: {fileID: 140562005}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &965557700
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
+--- !u!4 &1447700430 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4520318622635210, guid: d86ca2f4159e6a942abd8dfc52b38395, type: 3}
+  m_PrefabInstance: {fileID: 140562005}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 965557697}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6fd36970902aafb439e8b4196ddc26c9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UltimateFlashlightController
-  toggleKey: 102
-  isOn: 0
-  delayTime: 0.2
-  detectRange: 25
-  lightRadius: 3
-  monsterLayer:
-    serializedVersion: 2
-    m_Bits: 64
-  audioSource: {fileID: 0}
-  turnOnSound: {fileID: 0}
-  turnOffSound: {fileID: 0}
 --- !u!1 &1448324528 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2994704359952037799, guid: 93c894ebfac27404d9d676fe45635480, type: 3}
@@ -831,6 +810,10 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 1909772188936573254, guid: 93c894ebfac27404d9d676fe45635480, type: 3}
+      propertyPath: flashlight
+      value: 
+      objectReference: {fileID: 1447700430}
+    - target: {fileID: 1909772188936573254, guid: 93c894ebfac27404d9d676fe45635480, type: 3}
       propertyPath: attackRange
       value: 2
       objectReference: {fileID: 0}
@@ -841,6 +824,14 @@ PrefabInstance:
     - target: {fileID: 1909772188936573254, guid: 93c894ebfac27404d9d676fe45635480, type: 3}
       propertyPath: shakeIntensity
       value: 0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 1909772188936573254, guid: 93c894ebfac27404d9d676fe45635480, type: 3}
+      propertyPath: flashlightLight
+      value: 
+      objectReference: {fileID: 965557699}
+    - target: {fileID: 1909772188936573254, guid: 93c894ebfac27404d9d676fe45635480, type: 3}
+      propertyPath: obstacleLayer.m_Bits
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2216651668177796397, guid: 93c894ebfac27404d9d676fe45635480, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -909,6 +900,10 @@ PrefabInstance:
     - target: {fileID: 2994704359952037799, guid: 93c894ebfac27404d9d676fe45635480, type: 3}
       propertyPath: m_Name
       value: Monster2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2994704359952037799, guid: 93c894ebfac27404d9d676fe45635480, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3108570281528847777, guid: 93c894ebfac27404d9d676fe45635480, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -1599,14 +1594,14 @@ Light:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1869213930}
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 12
-  m_Type: 2
+  m_Type: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 1
-  m_Range: 10
-  m_SpotAngle: 30
-  m_InnerSpotAngle: 21.80208
+  m_Intensity: 20
+  m_Range: 30
+  m_SpotAngle: 60
+  m_InnerSpotAngle: 4
   m_CookieSize2D: {x: 0.5, y: 0.5}
   m_Shadows:
     m_Type: 0
@@ -1657,55 +1652,30 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
---- !u!4 &2001520355 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
-  m_PrefabInstance: {fileID: 457076259}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &2008446623 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7426772908973985818, guid: 5be7a6959bf0b31418bc0272b100f9bb, type: 3}
-  m_PrefabInstance: {fileID: 123590444}
-  m_PrefabAsset: {fileID: 0}
---- !u!82 &2008446625 stripped
-AudioSource:
-  m_CorrespondingSourceObject: {fileID: 7670139835807864854, guid: 5be7a6959bf0b31418bc0272b100f9bb, type: 3}
-  m_PrefabInstance: {fileID: 123590444}
-  m_PrefabAsset: {fileID: 0}
---- !u!195 &2008446629 stripped
-NavMeshAgent:
-  m_CorrespondingSourceObject: {fileID: 540528893524011904, guid: 5be7a6959bf0b31418bc0272b100f9bb, type: 3}
-  m_PrefabInstance: {fileID: 123590444}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &2008446631
+--- !u!114 &1869213933
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2008446623}
+  m_GameObject: {fileID: 1869213930}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4b64024f590562841a0d73d5b1ec452b, type: 3}
+  m_Script: {fileID: 11500000, guid: 6fd36970902aafb439e8b4196ddc26c9, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Monster_1_AI
-  player: {fileID: 2001520355}
-  detectRange: 10
-  attackRange: 1.5
-  obstacleLayer:
-    serializedVersion: 2
-    m_Bits: 0
-  flashlight: {fileID: 932269764}
-  flashlightLight: {fileID: 965557699}
-  flashlightStopAngle: 25
-  agent: {fileID: 2008446629}
-  rotateSpeed: 8
-  attackCooldown: 1.5
-  animator: {fileID: 0}
-  walkAudioSource: {fileID: 2008446625}
-  sfxAudioSource: {fileID: 2008446625}
-  walkSound: {fileID: 8300000, guid: 2b03773789f0f824dbe4095f392903c2, type: 3}
-  attackSound: {fileID: 8300000, guid: e07acf4be273f6d4d884b12942c8e800, type: 3}
+  m_EditorClassIdentifier: Assembly-CSharp::UltimateFlashlightController
+  toggleKey: 102
+  isOn: 0
+  _lightSource: {fileID: 965557699}
+  delayTime: 0.5
+  audioSource: {fileID: 0}
+  turnOnSound: {fileID: 0}
+  turnOffSound: {fileID: 0}
+--- !u!4 &2001520355 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
+  m_PrefabInstance: {fileID: 457076259}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

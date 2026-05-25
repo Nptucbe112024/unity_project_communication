@@ -8,10 +8,17 @@ public class Monster2 : MonoBehaviour {
     [Header("目標設定")]
     public Transform player;      
 
+    // ====== 【新加入：自主偵測手電筒所需的變數】 ======
+    [Header("手電筒自主偵測設定")]
+    public Transform flashlight;         // 玩家的手電筒 Transform
+    public Light flashlightLight;       // 手電筒的 Light 組件
+    public float flashlightStopAngle = 20f; // 手電筒判定的光錐扇形角度
+    public LayerMask obstacleLayer;     // 阻擋視線的障礙物圖層（例如牆壁、柱子）
+
     [Header("移動數值")]
     public float walkSpeed = 2.0f;
     public float runSpeed = 5.5f;
-    public float attackRange = 2.2f; 
+    public float attackRange = 2f; 
 
     [Header("攻擊命中設定")]
     public float hitRange = 2.5f;        // 真正揮爪時能打到玩家的極限距離
@@ -27,11 +34,11 @@ public class Monster2 : MonoBehaviour {
     private Vector3 frozenPlayerPos;       // 被抓住時玩家的固定位置
 
     [Header("視角對準設定")]
-    public float lookAtSpeed = 12.0f;    // 鏡頭強行轉向怪物的速度（數值越大轉越快）
+    public float lookAtSpeed = 12.0f;    // 鏡頭強行轉向怪物的速度
 
     // ====== 【鏡頭抖動設定】 ======
     [Header("玩家受撞擊抖動設定")]
-    public float shakeIntensity = 0.15f; // 抖動的劇烈程度（數值越大晃越大，建議 0.1 ~ 0.3）
+    public float shakeIntensity = 0.15f; // 抖動的劇烈程度
     private Vector3 originalCamLocalPos;  // 記錄相機原本的局部座標
     private bool hasSavedCamPos = false;  // 是否已經記錄相機初始位置
 
@@ -62,12 +69,16 @@ public class Monster2 : MonoBehaviour {
     void Update () {
         if (agent == null || !agent.isOnNavMesh) return;
 
+        // ====== 【核心修改：每幀自主檢查是否被玩家手電筒照到】 ======
+        if (IsHitByFlashlight()) {
+            detectTimer = calmDownTime; // 被照到就重設驚醒計時器
+        }
+
         // 計時器與定身邏輯
         if (detectTimer > 0) {
             isDetected = true;
             detectTimer -= Time.deltaTime;
 
-            // ====== 【核心修改：玩家原地卡死面朝怪物並抖動，怪物留在原地不移動】 ======
             if (isFreezingPlayer && player != null) {
                 // 1. 玩家位置處理：死死固定在原地
                 player.position = frozenPlayerPos;
@@ -89,7 +100,7 @@ public class Monster2 : MonoBehaviour {
                     }
                 }
 
-                // 3. 怪物動作處理：【已修改】取消衝刺撞擊，讓怪物原地停下並切換成 IDLE
+                // 3. 怪物動作處理：取消衝刺撞擊，讓怪物原地停下並切換成 IDLE
                 agent.isStopped = true;
                 agent.velocity = Vector3.zero;
                 UpdateAnimation(IDLE);
@@ -101,7 +112,7 @@ public class Monster2 : MonoBehaviour {
                     transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(monsterLook), Time.deltaTime * 15f);
                 }
 
-                // 4. 執行鏡頭隨機抖動（怪物在原地，玩家因為恐懼而全身發抖）
+                // 4. 執行鏡頭隨機抖動
                 if (playerCam != null) {
                     if (!hasSavedCamPos) {
                         originalCamLocalPos = playerCam.transform.localPosition;
@@ -147,9 +158,32 @@ public class Monster2 : MonoBehaviour {
         }
     }
 
-    public void BeIlluminated() {
-        if (isFreezingPlayer) return; 
-        detectTimer = calmDownTime;
+    // ====== 【新加入：從第一個程式完美移植的數學自主偵測邏輯】 ======
+    bool IsHitByFlashlight() {
+        if (flashlight == null || flashlightLight == null) return false;
+        if (!flashlightLight.enabled) return false; // 手電筒沒開就不算
+
+        // 計算怪物與手電筒的距離 (加入高度偏移避免射線貼地)
+        Vector3 monsterPoint = transform.position + Vector3.up * 1.2f;
+        Vector3 directionToMonster = monsterPoint - flashlight.position;
+        float distanceToMonster = directionToMonster.magnitude;
+
+        // 超出光照距離
+        if (distanceToMonster > flashlightLight.range) return false;
+
+        // 計算夾角，判斷是否在手電筒光錐內
+        float angle = Vector3.Angle(flashlight.forward, directionToMonster);
+        if (angle > flashlightStopAngle) return false;
+
+        // 射線檢查是否有牆壁遮擋
+        if (Physics.Raycast(flashlight.position, directionToMonster.normalized, out RaycastHit hit, distanceToMonster, obstacleLayer)) {
+            // 如果射線射中的東西不是怪物自己，代表被牆壁擋住了
+            if (hit.transform != transform && !hit.transform.IsChildOf(transform)) {
+                return false;
+            }
+        }
+
+        return true; // 成功偵測到被手電筒照中！
     }
 
     void ChaseAndAttack() {
@@ -189,9 +223,9 @@ public class Monster2 : MonoBehaviour {
             
             Debug.Log("💥 攻擊成功命中！啟動原地定身、強制面朝怪物與驚恐抖動機制！");
 
-            UltimateFlashlightController flashlight = player.GetComponentInChildren<UltimateFlashlightController>();
-            if (flashlight != null) {
-                flashlight.RequestTurnOff();
+            UltimateFlashlightController flashlightCtrl = player.GetComponentInChildren<UltimateFlashlightController>();
+            if (flashlightCtrl != null) {
+                flashlightCtrl.RequestTurnOff();
             }
 
             detectTimer = calmDownTime;
