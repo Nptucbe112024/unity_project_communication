@@ -21,6 +21,9 @@ public class LaserPuzzleController : MonoBehaviour
     [Header("關卡設定（留空則用預設關卡）")]
     [SerializeField] private PuzzleLevelData levelData;       // ScriptableObject（可選）
 
+    [Header("相機（拖入 Monitor 上的 Camera）")]
+    [SerializeField] private Camera puzzleCamera;
+
     [Header("IMGUI 工具列外觀")]
     [SerializeField] private int toolbarHeight = 36;
     [SerializeField] private int toolbarFontSize = 14;
@@ -29,7 +32,7 @@ public class LaserPuzzleController : MonoBehaviour
     // 公開屬性
     // ──────────────────────────────────────────
     public LaserPuzzleData Data { get; private set; }
-    public Camera PuzzleCamera => Camera.main;
+    public Camera PuzzleCamera => puzzleCamera != null ? puzzleCamera : Camera.main;
 
     public System.Action OnPuzzleSolved;
     public System.Action OnPuzzleClosed;
@@ -37,7 +40,7 @@ public class LaserPuzzleController : MonoBehaviour
     // ──────────────────────────────────────────
     // 內部狀態
     // ──────────────────────────────────────────
-    private LaserPuzzleData.CellType selectedType = LaserPuzzleData.CellType.MirrorSlash;
+    private CellType selectedType = CellType.MirrorSlash;
     private bool eraserMode  = false;
     private bool guiVisible  = false;
 
@@ -75,10 +78,10 @@ public class LaserPuzzleController : MonoBehaviour
     /// 用程式碼直接載入關卡。
     /// 範例：
     ///   var data = new LaserPuzzleData(7, 10);
-    ///   data.SetSource(3, LaserPuzzleData.Direction.Right);
+    ///   data.SetSource(3, PuzzleDirection.Right);
     ///   data.AddTarget(3);
-    ///   data.SetCell(2, 2, LaserPuzzleData.CellType.Wall);
-    ///   data.SetCell(0, 2, LaserPuzzleData.CellType.MirrorSlash, true);
+    ///   data.SetCell(2, 2, CellType.Wall);
+    ///   data.SetCell(0, 2, CellType.MirrorSlash, true);
     ///   controller.LoadCustomLevel(data);
     /// </summary>
     public void LoadCustomLevel(LaserPuzzleData data)
@@ -111,16 +114,16 @@ public class LaserPuzzleController : MonoBehaviour
         float bw = 90f;
 
         DrawToolBtn(ref x, barY, bw, "╱ 鏡子/",
-            selectedType == LaserPuzzleData.CellType.MirrorSlash && !eraserMode,
-            () => { selectedType = LaserPuzzleData.CellType.MirrorSlash; eraserMode = false; });
+            selectedType == CellType.MirrorSlash && !eraserMode,
+            () => { selectedType = CellType.MirrorSlash; eraserMode = false; });
 
         DrawToolBtn(ref x, barY, bw, "╲ 鏡子\\",
-            selectedType == LaserPuzzleData.CellType.MirrorBack && !eraserMode,
-            () => { selectedType = LaserPuzzleData.CellType.MirrorBack; eraserMode = false; });
+            selectedType == CellType.MirrorBack && !eraserMode,
+            () => { selectedType = CellType.MirrorBack; eraserMode = false; });
 
         DrawToolBtn(ref x, barY, bw, "✦ 分光器",
-            selectedType == LaserPuzzleData.CellType.Splitter && !eraserMode,
-            () => { selectedType = LaserPuzzleData.CellType.Splitter; eraserMode = false; });
+            selectedType == CellType.Splitter && !eraserMode,
+            () => { selectedType = CellType.Splitter; eraserMode = false; });
 
         DrawToolBtn(ref x, barY, bw, "✕ 清除",
             eraserMode,
@@ -245,9 +248,9 @@ public class LaserPuzzleController : MonoBehaviour
         if (!statusText || Data.IsSolved) return;
         string mode = eraserMode ? "清除模式" : selectedType switch
         {
-            LaserPuzzleData.CellType.MirrorSlash => "放置 / 鏡子",
-            LaserPuzzleData.CellType.MirrorBack  => "放置 \\ 鏡子",
-            LaserPuzzleData.CellType.Splitter    => "放置分光器",
+            CellType.MirrorSlash => "放置 / 鏡子",
+            CellType.MirrorBack  => "放置 \\ 鏡子",
+            CellType.Splitter    => "放置分光器",
             _ => ""
         };
         if (statusText) statusText.text = $"{mode}　左鍵放置・右鍵清除・ESC 關閉";
@@ -259,18 +262,18 @@ public class LaserPuzzleController : MonoBehaviour
     static LaserPuzzleData BuildDefaultLevel()
     {
         var d = new LaserPuzzleData(7, 10);
-        d.SetSource(3, LaserPuzzleData.Direction.Right);
+        d.SetSource(3, PuzzleDirection.Right);
         d.AddTarget(3);
 
         // 牆壁
         foreach (var (r,c) in new[]{(2,2),(2,3),(4,6),(4,7),(1,7),(5,3)})
-            d.SetCell(r, c, LaserPuzzleData.CellType.Wall);
+            d.SetCell(r, c, CellType.Wall);
 
         // 固定鏡子
-        d.SetCell(0, 2, LaserPuzzleData.CellType.MirrorSlash, true);
-        d.SetCell(6, 2, LaserPuzzleData.CellType.MirrorBack,  true);
-        d.SetCell(0, 7, LaserPuzzleData.CellType.MirrorBack,  true);
-        d.SetCell(6, 8, LaserPuzzleData.CellType.MirrorSlash, true);
+        d.SetCell(0, 2, CellType.MirrorSlash, true);
+        d.SetCell(6, 2, CellType.MirrorBack,  true);
+        d.SetCell(0, 7, CellType.MirrorBack,  true);
+        d.SetCell(6, 8, CellType.MirrorSlash, true);
 
         return d;
     }

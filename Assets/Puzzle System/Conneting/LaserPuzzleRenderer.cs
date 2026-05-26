@@ -50,12 +50,17 @@ public class LaserPuzzleRenderer : MonoBehaviour
         int texW = Data.Cols * cellPixels;
         int texH = Data.Rows * cellPixels;
         tex = new Texture2D(texW, texH, TextureFormat.RGBA32, false);
-        tex.filterMode = FilterMode.Point;
+        tex.filterMode = FilterMode.Bilinear;
         displayImage.texture = tex;
 
-        // 調整 RawImage 大小
+        // World Space Canvas：讓 RawImage 用 Anchor 撐滿父容器
+        // 在 Inspector 把 RawImage 的 Anchor 設為 stretch-stretch 即可
+        // 這裡不強制 sizeDelta，避免超出 Canvas
         var rt = displayImage.rectTransform;
-        rt.sizeDelta = new Vector2(texW, texH);
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
     }
 
     // 外部呼叫更新渲染
@@ -87,13 +92,13 @@ public class LaserPuzzleRenderer : MonoBehaviour
             int sz = cellPixels - borderPixels * 2;
 
             var cell = Data.Grid[r, c];
-            Color fill = cell.Type == LaserPuzzleData.CellType.Wall
+            Color fill = cell.Type == CellType.Wall
                 ? wallColor : emptyCellColor;
 
             FillRect(px, py, sz, sz, fill);
 
             // hover 高亮
-            if (hoveredCell == new Vector2Int(r, c) && !cell.IsFixed && cell.Type != LaserPuzzleData.CellType.Wall)
+            if (hoveredCell == new Vector2Int(r, c) && !cell.IsFixed && cell.Type != CellType.Wall)
                 FillRect(px, py, sz, sz, hoverColor);
 
             // 格線
@@ -120,7 +125,7 @@ public class LaserPuzzleRenderer : MonoBehaviour
         for (int c = 0; c < Data.Cols; c++)
         {
             var cell = Data.Grid[r, c];
-            if (cell.Type == LaserPuzzleData.CellType.Empty || cell.Type == LaserPuzzleData.CellType.Wall)
+            if (cell.Type == CellType.Empty || cell.Type == CellType.Wall)
                 continue;
 
             int cx = c * cellPixels + cellPixels / 2;
@@ -133,13 +138,13 @@ public class LaserPuzzleRenderer : MonoBehaviour
 
             switch (cell.Type)
             {
-                case LaserPuzzleData.CellType.MirrorSlash:
+                case CellType.MirrorSlash:
                     DrawLine(cx - half, cy + half, cx + half, cy - half, mirrorColor, 3);
                     break;
-                case LaserPuzzleData.CellType.MirrorBack:
+                case CellType.MirrorBack:
                     DrawLine(cx - half, cy - half, cx + half, cy + half, mirrorColor, 3);
                     break;
-                case LaserPuzzleData.CellType.Splitter:
+                case CellType.Splitter:
                     DrawLine(cx - half, cy + half, cx + half, cy - half, splitterColor, 2);
                     DrawLine(cx - half, cy - half, cx + half, cy + half, splitterColor, 2);
                     DrawCircle(cx, cy, 5, splitterColor);
@@ -187,22 +192,25 @@ public class LaserPuzzleRenderer : MonoBehaviour
     public bool TryGetGridCell(Vector2 screenPos, out Vector2Int cell)
     {
         cell = new Vector2Int(-1, -1);
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+        // World Space Canvas 需要傳入 puzzleCamera
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
             displayImage.rectTransform, screenPos,
-            controller.PuzzleCamera, out Vector2 local);
+            controller.PuzzleCamera, out Vector2 local))
+        {
+            return false;
+        }
 
-        // local 以 Pivot 為原點（預設左下=0,0 in Unity UI...但 RawImage 預設 pivot 中心）
-        // 調整：將 local 從中心轉換到左上角
+        // local 原點在 RawImage 中心，轉換到左上角（0,0）
         var rect = displayImage.rectTransform.rect;
-        float lx = local.x + rect.width  / 2f;
-        float ly = local.y + rect.height / 2f;
+        float lx = local.x - rect.xMin;          // 距左邊距離
+        float ly = rect.yMax - local.y;          // 距上邊距離（y 軸翻轉）
 
-        int c = Mathf.FloorToInt(lx / cellPixels);
-        int r = Mathf.FloorToInt(ly / cellPixels);
+        // 依 RawImage 實際顯示大小換算到格子座標
+        float cellW = rect.width  / Data.Cols;
+        float cellH = rect.height / Data.Rows;
 
-        // Texture Y 軸：Unity UI 由下往上，但 Texture2D SetPixel 由下往上也一樣
-        // 所以需要反轉 row
-        r = Data.Rows - 1 - r;
+        int c = Mathf.FloorToInt(lx / cellW);
+        int r = Mathf.FloorToInt(ly / cellH);
 
         if (r < 0 || r >= Data.Rows || c < 0 || c >= Data.Cols) return false;
         cell = new Vector2Int(r, c);
