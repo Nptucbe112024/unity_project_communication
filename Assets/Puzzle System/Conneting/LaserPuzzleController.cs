@@ -18,8 +18,10 @@ public class LaserPuzzleController : MonoBehaviour
     [SerializeField] private GameObject puzzlePanel;          // World Space Canvas 根節點
     [SerializeField] private TextMeshProUGUI statusText;
 
-    [Header("關卡設定（留空則用預設關卡）")]
-    [SerializeField] private PuzzleLevelData levelData;       // ScriptableObject（可選）
+    [Header("關卡設定")]
+    [SerializeField] private PuzzleLevelData levelData;  // 手動設定（留空則自動生成）
+    [SerializeField] private bool autoGenerate = true;   // 自動生成關卡
+    [SerializeField] private int generatorSeed = 0;      // 0 = 每次隨機；其他值固定結果
 
     [Header("相機（拖入 Monitor 上的 Camera）")]
     [SerializeField] private Camera puzzleCamera;
@@ -216,11 +218,34 @@ public class LaserPuzzleController : MonoBehaviour
     void LoadLevel()
     {
         if (levelData != null)
+        {
             Data = levelData.Build();
+        }
+        else if (autoGenerate)
+        {
+            if (generatorSeed != 0) Random.InitState(generatorSeed);
+            var cfg = PuzzleLevelGenerator.GeneratorConfig.Default;
+            Data = PuzzleLevelGenerator.Generate(cfg);
+            if (Data == null) Data = BuildDefaultLevel(); // 萬一失敗才用預設
+        }
         else
+        {
             Data = BuildDefaultLevel();
-
+        }
         Data.Trace();
+    }
+
+    /// <summary>
+    /// 重新生成一個新關卡（可在外部呼叫，例如按鈕）
+    /// </summary>
+    public void GenerateNewLevel(int seed = 0)
+    {
+        if (seed != 0) Random.InitState(seed);
+        var cfg = PuzzleLevelGenerator.GeneratorConfig.Default;
+        Data = PuzzleLevelGenerator.Generate(cfg) ?? BuildDefaultLevel();
+        Data.Trace();
+        puzzleRenderer.Redraw();
+        UpdateStatusText();
     }
 
     void RefreshPuzzle()
