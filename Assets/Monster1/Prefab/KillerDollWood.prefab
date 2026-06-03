@@ -104,10 +104,9 @@ MonoBehaviour:
   flashlight: {fileID: 0}
   flashlightLight: {fileID: 0}
   flashlightStopAngle: 20
-  monsterLayer:
-    serializedVersion: 2
-    m_Bits: 0
   agent: {fileID: 540528893524011904}
+  rotateSpeed: 8
+  attackCooldown: 1.5
   animator: {fileID: 0}
   walkAudioSource: {fileID: 7670139835807864854}
   sfxAudioSource: {fileID: 3628006798838687255}
