@@ -18,6 +18,9 @@ public class LaserPuzzleController : MonoBehaviour
     [SerializeField] private GameObject puzzlePanel;          // World Space Canvas 根節點
     [SerializeField] private TextMeshProUGUI statusText;
 
+    [Header("Clear 動畫面板")]
+    [SerializeField] private PuzzleClearPanel clearPanel;
+
     [Header("關卡設定")]
     [SerializeField] private PuzzleLevelData levelData;  // 手動設定（留空則自動生成）
     [SerializeField] private bool autoGenerate = true;   // 自動生成關卡
@@ -45,6 +48,7 @@ public class LaserPuzzleController : MonoBehaviour
     private CellType selectedType = CellType.MirrorSlash;
     private bool eraserMode  = false;
     private bool guiVisible  = false;
+    private LaserPuzzleData savedInitialData = null; // 記錄初始關卡狀態
 
     private GUIStyle btnStyle;
     private GUIStyle btnSelectedStyle;
@@ -71,6 +75,7 @@ public class LaserPuzzleController : MonoBehaviour
 
     public void ClosePuzzle()
     {
+        clearPanel?.Hide();
         puzzlePanel.SetActive(false);
         guiVisible = false;
         OnPuzzleClosed?.Invoke();
@@ -193,15 +198,29 @@ public class LaserPuzzleController : MonoBehaviour
 
             if (Input.GetMouseButtonDown(0))
             {
-                bool changed = eraserMode
-                    ? Data.TryRemoveCell(cell.x, cell.y)
-                    : Data.TryPlaceCell(cell.x, cell.y, selectedType);
+                bool changed;
+                if (eraserMode)
+                {
+                    changed = Data.TryRemoveCell(cell.x, cell.y);
+                    if (changed)
+                        Debug.Log($"[{gameObject.name}] 清除格子 ({cell.x},{cell.y}) | 雷射通關：{Data.IsSolved}");
+                }
+                else
+                {
+                    changed = Data.TryPlaceCell(cell.x, cell.y, selectedType);
+                    if (changed)
+                        Debug.Log($"[{gameObject.name}] 放置 {selectedType} 於 ({cell.x},{cell.y}) | 雷射通關：{Data.IsSolved}");
+                }
                 if (changed) RefreshPuzzle();
             }
 
             if (Input.GetMouseButtonDown(1))
             {
-                if (Data.TryRemoveCell(cell.x, cell.y)) RefreshPuzzle();
+                if (Data.TryRemoveCell(cell.x, cell.y))
+                {
+                    Debug.Log($"[{gameObject.name}] 右鍵清除 ({cell.x},{cell.y}) | 雷射通關：{Data.IsSolved}");
+                    RefreshPuzzle();
+                }
             }
         }
         else
@@ -233,6 +252,7 @@ public class LaserPuzzleController : MonoBehaviour
             Data = BuildDefaultLevel();
         }
         Data.Trace();
+        savedInitialData = Data.Clone(); // 存快照，Reset 用
     }
 
     /// <summary>
@@ -258,14 +278,25 @@ public class LaserPuzzleController : MonoBehaviour
         {
             OnPuzzleSolved?.Invoke();
             if (statusText) statusText.text = "✓ 解謎成功！";
+            clearPanel?.Show();
         }
     }
 
     void ResetPuzzle()
     {
-        LoadLevel();
+        // 還原到初始快照，不重新生成關卡
+        if (savedInitialData != null)
+        {
+            Data = savedInitialData.Clone();
+            Data.Trace();
+        }
+        else
+        {
+            LoadLevel();
+        }
         puzzleRenderer.Redraw();
         UpdateStatusText();
+        Debug.Log($"[{gameObject.name}] 關卡已重置");
     }
 
     void UpdateStatusText()

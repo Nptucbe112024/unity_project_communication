@@ -221,4 +221,24 @@ public class LaserPuzzleData
 
     private bool InBoundsOrBorder(Vector2Int v) =>
         v.x >= -1 && v.x <= Rows && v.y >= -1 && v.y <= Cols;
+    /// <summary>
+    /// 深拷貝：複製整個 Grid 狀態，用於重置快照
+    /// </summary>
+    public LaserPuzzleData Clone()
+    {
+        var copy = new LaserPuzzleData(Rows, Cols);
+        copy.Source  = this.Source;
+        copy.Targets = new System.Collections.Generic.List<LaserTarget>();
+        foreach (var t in this.Targets)
+            copy.Targets.Add(t);
+
+        for (int r = 0; r < Rows; r++)
+        for (int c = 0; c < Cols; c++)
+        {
+            copy.Grid[r, c].Type    = this.Grid[r, c].Type;
+            copy.Grid[r, c].IsFixed = this.Grid[r, c].IsFixed;
+        }
+        return copy;
+    }
+
 }
