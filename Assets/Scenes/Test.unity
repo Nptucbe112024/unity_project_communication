@@ -1291,6 +1291,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4907239047242697929, guid: 82430f94fd1381c43878fce981a5aa43, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4907239047242697930, guid: 82430f94fd1381c43878fce981a5aa43, type: 3}
       propertyPath: m_LocalPosition.x
       value: 30.46435
@@ -1615,10 +1619,15 @@ MonoBehaviour:
   chaseDistance: 30
   disengageDistance: 50
   attackRange: 1.5
+  attackCooldown: 1.2
   losePlayerAfterNoSound: 1
   chaseKeepIntensity: 3
   chaseTriggerIntensity: 5
   alertTimeout: 3
+  idleAnim: Idle
+  walk1Anim: Walk1
+  walk2Anim: Walk2
+  biteAnim: Bite
 --- !u!114 &1528013639
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1642,8 +1651,8 @@ Animator:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1528013631}
   m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 0}
+  m_Avatar: {fileID: 9000000, guid: 055d3fd7bd3901042a44bb13f3160e0e, type: 3}
+  m_Controller: {fileID: 9100000, guid: 29a3c0dfb46f31f498f075676d8d89c7, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0

@@ -9,7 +9,8 @@ public class SoundMonsterAI2 : MonoBehaviour
     {
         Patrol,
         Alert,
-        Chase
+        Chase,
+        Attack
     }
 
     [Header("目標")]
@@ -33,6 +34,7 @@ public class SoundMonsterAI2 : MonoBehaviour
 
     [Header("攻擊 / 停止距離")]
     public float attackRange = 1.5f;
+    public float attackCooldown = 1.2f;
 
     [Header("追擊放棄設定")]
     public float losePlayerAfterNoSound = 1f;
@@ -46,26 +48,35 @@ public class SoundMonsterAI2 : MonoBehaviour
     [Header("警戒逾時")]
     public float alertTimeout = 3f;
 
+    [Header("動畫狀態名稱")]
+    public string idleAnim = "Idle";
+    public string walk1Anim = "Walk1";
+    public string walk2Anim = "Walk2";
+    public string biteAnim = "Bite";
+
     NavMeshAgent agent;
     MonsterHearing2 hearing;
     Renderer rend;
+    Animator animator;
 
     Vector3 lastSoundPos;
     bool hasLastSoundPos;
 
     float lastStrongSoundTime;
     float alertTimer;
+    float attackTimer;
 
     Vector3 patrolTarget;
     bool hasPatrolTarget;
+
+    string currentAnim = "";
 
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
         hearing = GetComponent<MonsterHearing2>();
-
-        // 怪物模型 Renderer 常常在子物件，所以用 GetComponentInChildren
         rend = GetComponentInChildren<Renderer>();
+        animator = GetComponentInChildren<Animator>();
     }
 
     void Start()
@@ -83,9 +94,6 @@ public class SoundMonsterAI2 : MonoBehaviour
             lastSoundPos = soundPos;
             hasLastSoundPos = true;
 
-            // 重點：
-            // 只有足夠大的聲音，例如走路 / 跑步，才會刷新追擊時間
-            // 呼吸聲太小，不會讓怪物一直追
             if (intensity >= chaseKeepIntensity)
             {
                 lastStrongSoundTime = Time.time;
@@ -108,6 +116,10 @@ public class SoundMonsterAI2 : MonoBehaviour
 
             case State.Chase:
                 UpdateChase();
+                break;
+
+            case State.Attack:
+                UpdateAttack();
                 break;
         }
     }
@@ -149,13 +161,11 @@ public class SoundMonsterAI2 : MonoBehaviour
 
     bool ShouldChase(float intensity, float distToSound)
     {
-        // 聲音夠大，直接追
         if (intensity >= chaseTriggerIntensity)
         {
             return true;
         }
 
-        // 聲音距離很近，而且不是太小聲，也可以追
         if (distToSound <= chaseDistance && intensity >= chaseKeepIntensity)
         {
             return true;
@@ -167,6 +177,9 @@ public class SoundMonsterAI2 : MonoBehaviour
     void UpdatePatrol()
     {
         agent.speed = patrolSpeed;
+        agent.stoppingDistance = 0f;
+
+        PlayAnim(walk1Anim);
 
         if (!hasPatrolTarget || (!agent.pathPending && agent.remainingDistance <= waypointArriveDistance))
         {
@@ -178,6 +191,15 @@ public class SoundMonsterAI2 : MonoBehaviour
     {
         agent.speed = alertSpeed;
         agent.stoppingDistance = 0f;
+
+        if (agent.hasPath && agent.remainingDistance > waypointArriveDistance)
+        {
+            PlayAnim(walk2Anim);
+        }
+        else
+        {
+            PlayAnim(idleAnim);
+        }
 
         if (heardThisFrame)
         {
@@ -197,6 +219,7 @@ public class SoundMonsterAI2 : MonoBehaviour
         if (hasLastSoundPos && !agent.pathPending && agent.remainingDistance <= waypointArriveDistance)
         {
             agent.ResetPath();
+            PlayAnim(idleAnim);
         }
     }
 
@@ -205,7 +228,6 @@ public class SoundMonsterAI2 : MonoBehaviour
         agent.speed = chaseSpeed;
         agent.stoppingDistance = attackRange;
 
-        // 玩家超過指定時間沒有發出有效聲音，怪物放棄追擊
         if (Time.time - lastStrongSoundTime >= losePlayerAfterNoSound)
         {
             Debug.Log("[MONSTER] Lost player: no strong sound for 1 second.");
@@ -218,6 +240,7 @@ public class SoundMonsterAI2 : MonoBehaviour
             if (hasLastSoundPos)
             {
                 agent.SetDestination(lastSoundPos);
+                PlayAnim(walk2Anim);
             }
 
             return;
@@ -225,22 +248,56 @@ public class SoundMonsterAI2 : MonoBehaviour
 
         float distToPlayer = Vector3.Distance(transform.position, player.position);
 
-        // 重點：
-        // 怪物靠近玩家時停止，不要繼續推玩家
         if (distToPlayer <= attackRange)
         {
-            agent.ResetPath();
-            agent.velocity = Vector3.zero;
-            FacePlayer();
+            EnterAttack();
             return;
         }
 
         agent.SetDestination(player.position);
         FacePlayerSoft();
+        PlayAnim(walk2Anim);
 
         if (distToPlayer > disengageDistance)
         {
             EnterAlert(lastSoundPos);
+        }
+    }
+
+    void UpdateAttack()
+    {
+        agent.ResetPath();
+        agent.velocity = Vector3.zero;
+
+        FacePlayer();
+
+        attackTimer += Time.deltaTime;
+
+        if (attackTimer >= attackCooldown)
+        {
+            attackTimer = 0f;
+
+            if (Time.time - lastStrongSoundTime >= losePlayerAfterNoSound)
+            {
+                EnterAlert(lastSoundPos);
+                return;
+            }
+
+            if (player == null)
+            {
+                EnterAlert(lastSoundPos);
+                return;
+            }
+
+            float distToPlayer = Vector3.Distance(transform.position, player.position);
+
+            if (distToPlayer > attackRange)
+            {
+                EnterChase();
+                return;
+            }
+
+            PlayAnim(biteAnim);
         }
     }
 
@@ -253,6 +310,8 @@ public class SoundMonsterAI2 : MonoBehaviour
 
         agent.speed = patrolSpeed;
         agent.stoppingDistance = 0f;
+
+        PlayAnim(walk1Anim);
 
         if (rend != null)
         {
@@ -274,6 +333,11 @@ public class SoundMonsterAI2 : MonoBehaviour
         if (hasLastSoundPos)
         {
             agent.SetDestination(target);
+            PlayAnim(walk2Anim);
+        }
+        else
+        {
+            PlayAnim(idleAnim);
         }
 
         if (rend != null)
@@ -302,12 +366,34 @@ public class SoundMonsterAI2 : MonoBehaviour
             agent.SetDestination(lastSoundPos);
         }
 
+        PlayAnim(walk2Anim);
+
         if (rend != null)
         {
             rend.material.color = Color.red;
         }
 
         Debug.Log("[MONSTER] State = Chase");
+    }
+
+    void EnterAttack()
+    {
+        currentState = State.Attack;
+
+        agent.ResetPath();
+        agent.velocity = Vector3.zero;
+
+        attackTimer = 0f;
+
+        FacePlayer();
+        PlayAnim(biteAnim);
+
+        if (rend != null)
+        {
+            rend.material.color = new Color(0.4f, 0f, 0f);
+        }
+
+        Debug.Log("[MONSTER] State = Attack");
     }
 
     void SetRandomPatrolPoint()
@@ -328,6 +414,7 @@ public class SoundMonsterAI2 : MonoBehaviour
         }
 
         agent.ResetPath();
+        PlayAnim(idleAnim);
     }
 
     void FacePlayer()
@@ -358,6 +445,16 @@ public class SoundMonsterAI2 : MonoBehaviour
             lookRotation,
             Time.deltaTime * 5f
         );
+    }
+
+    void PlayAnim(string animName)
+    {
+        if (animator == null) return;
+        if (string.IsNullOrEmpty(animName)) return;
+        if (currentAnim == animName) return;
+
+        currentAnim = animName;
+        animator.CrossFade(animName, 0.15f);
     }
 
     void OnDrawGizmosSelected()
