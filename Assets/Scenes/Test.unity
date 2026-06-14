@@ -1295,6 +1295,14 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4907239047242697929, guid: 82430f94fd1381c43878fce981a5aa43, type: 3}
+      propertyPath: m_LODs.Array.data[0].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4907239047242697929, guid: 82430f94fd1381c43878fce981a5aa43, type: 3}
+      propertyPath: m_LODs.Array.data[1].screenRelativeHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4907239047242697930, guid: 82430f94fd1381c43878fce981a5aa43, type: 3}
       propertyPath: m_LocalPosition.x
       value: 30.46435
@@ -1472,16 +1480,24 @@ PrefabInstance:
       value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 7440230003808341372, guid: 82430f94fd1381c43878fce981a5aa43, type: 3}
+      propertyPath: m_Avatar
+      value: 
+      objectReference: {fileID: 9000000, guid: 055d3fd7bd3901042a44bb13f3160e0e, type: 3}
+    - target: {fileID: 7440230003808341372, guid: 82430f94fd1381c43878fce981a5aa43, type: 3}
       propertyPath: m_Enabled
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7440230003808341372, guid: 82430f94fd1381c43878fce981a5aa43, type: 3}
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: 29a3c0dfb46f31f498f075676d8d89c7, type: 2}
     - target: {fileID: 7440230004507457928, guid: 82430f94fd1381c43878fce981a5aa43, type: 3}
+      propertyPath: m_Avatar
+      value: 
+      objectReference: {fileID: 9000000, guid: 055d3fd7bd3901042a44bb13f3160e0e, type: 3}
+    - target: {fileID: 7440230004507457928, guid: 82430f94fd1381c43878fce981a5aa43, type: 3}
       propertyPath: m_Enabled
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7440230004507457928, guid: 82430f94fd1381c43878fce981a5aa43, type: 3}
       propertyPath: m_Controller
@@ -1644,6 +1660,9 @@ MonoBehaviour:
   walk1Anim: Walk1
   walk2Anim: Walk2
   biteAnim: Bite
+  moveAnimThreshold: 0.02
+  idleDelay: 0.6
+  movingDistanceBuffer: 0.1
 --- !u!114 &1528013639
 MonoBehaviour:
   m_ObjectHideFlags: 0

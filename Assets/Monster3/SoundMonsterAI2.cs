@@ -54,6 +54,16 @@ public class SoundMonsterAI2 : MonoBehaviour
     public string walk2Anim = "Walk2";
     public string biteAnim = "Bite";
 
+    [Header("動畫切換設定")]
+    [Tooltip("速度大於這個值才算有移動")]
+    public float moveAnimThreshold = 0.02f;
+
+    [Tooltip("停住多久後才切回 Idle，避免走路時瞬間跳 Idle")]
+    public float idleDelay = 0.45f;
+
+    [Tooltip("只要還離目的地超過這個距離，就視為正在移動，避免遠距離追擊時平移")]
+    public float movingDistanceBuffer = 0.2f;
+
     NavMeshAgent agent;
     MonsterHearing2 hearing;
     Renderer rend;
@@ -70,6 +80,7 @@ public class SoundMonsterAI2 : MonoBehaviour
     bool hasPatrolTarget;
 
     string currentAnim = "";
+    float idleTimer = 0f;
 
     void Awake()
     {
@@ -81,7 +92,11 @@ public class SoundMonsterAI2 : MonoBehaviour
 
     void Start()
     {
-        agent.stoppingDistance = attackRange;
+        if (agent != null)
+        {
+            agent.stoppingDistance = attackRange;
+        }
+
         EnterPatrol();
     }
 
@@ -179,27 +194,18 @@ public class SoundMonsterAI2 : MonoBehaviour
         agent.speed = patrolSpeed;
         agent.stoppingDistance = 0f;
 
-        PlayAnim(walk1Anim);
-
         if (!hasPatrolTarget || (!agent.pathPending && agent.remainingDistance <= waypointArriveDistance))
         {
             SetRandomPatrolPoint();
         }
+
+        UpdateMoveAnimation();
     }
 
     void UpdateAlert(bool heardThisFrame)
     {
         agent.speed = alertSpeed;
         agent.stoppingDistance = 0f;
-
-        if (agent.hasPath && agent.remainingDistance > waypointArriveDistance)
-        {
-            PlayAnim(walk2Anim);
-        }
-        else
-        {
-            PlayAnim(idleAnim);
-        }
 
         if (heardThisFrame)
         {
@@ -219,8 +225,9 @@ public class SoundMonsterAI2 : MonoBehaviour
         if (hasLastSoundPos && !agent.pathPending && agent.remainingDistance <= waypointArriveDistance)
         {
             agent.ResetPath();
-            PlayAnim(idleAnim);
         }
+
+        UpdateMoveAnimation();
     }
 
     void UpdateChase()
@@ -240,9 +247,9 @@ public class SoundMonsterAI2 : MonoBehaviour
             if (hasLastSoundPos)
             {
                 agent.SetDestination(lastSoundPos);
-                PlayAnim(walk2Anim);
             }
 
+            UpdateMoveAnimation();
             return;
         }
 
@@ -256,7 +263,8 @@ public class SoundMonsterAI2 : MonoBehaviour
 
         agent.SetDestination(player.position);
         FacePlayerSoft();
-        PlayAnim(walk2Anim);
+
+        UpdateMoveAnimation();
 
         if (distToPlayer > disengageDistance)
         {
@@ -307,11 +315,15 @@ public class SoundMonsterAI2 : MonoBehaviour
 
         alertTimer = 0f;
         hasPatrolTarget = false;
+        idleTimer = 0f;
 
         agent.speed = patrolSpeed;
         agent.stoppingDistance = 0f;
 
-        PlayAnim(walk1Anim);
+        SetRandomPatrolPoint();
+
+        // 不直接播放 Walk1，避免剛進巡邏但還沒移動時播錯
+        PlayAnim(idleAnim);
 
         if (rend != null)
         {
@@ -326,6 +338,7 @@ public class SoundMonsterAI2 : MonoBehaviour
         currentState = State.Alert;
 
         alertTimer = 0f;
+        idleTimer = 0f;
 
         agent.speed = alertSpeed;
         agent.stoppingDistance = 0f;
@@ -333,12 +346,9 @@ public class SoundMonsterAI2 : MonoBehaviour
         if (hasLastSoundPos)
         {
             agent.SetDestination(target);
-            PlayAnim(walk2Anim);
         }
-        else
-        {
-            PlayAnim(idleAnim);
-        }
+
+        PlayAnim(idleAnim);
 
         if (rend != null)
         {
@@ -351,6 +361,8 @@ public class SoundMonsterAI2 : MonoBehaviour
     void EnterChase()
     {
         currentState = State.Chase;
+
+        idleTimer = 0f;
 
         agent.speed = chaseSpeed;
         agent.stoppingDistance = attackRange;
@@ -366,6 +378,7 @@ public class SoundMonsterAI2 : MonoBehaviour
             agent.SetDestination(lastSoundPos);
         }
 
+        // 追擊開始時先播 Walk2，避免遠距離剛開始追時平移
         PlayAnim(walk2Anim);
 
         if (rend != null)
@@ -384,6 +397,7 @@ public class SoundMonsterAI2 : MonoBehaviour
         agent.velocity = Vector3.zero;
 
         attackTimer = 0f;
+        idleTimer = 0f;
 
         FacePlayer();
         PlayAnim(biteAnim);
@@ -413,8 +427,55 @@ public class SoundMonsterAI2 : MonoBehaviour
             }
         }
 
+        hasPatrolTarget = false;
         agent.ResetPath();
-        PlayAnim(idleAnim);
+    }
+
+    void UpdateMoveAnimation()
+    {
+        if (animator == null) return;
+        if (currentState == State.Attack) return;
+        if (agent == null || !agent.enabled) return;
+
+        bool hasValidPath =
+            agent.hasPath &&
+            !agent.pathPending &&
+            agent.remainingDistance > agent.stoppingDistance + movingDistanceBuffer;
+
+        bool isCalculatingPath =
+            agent.pathPending;
+
+        bool hasVelocity =
+            agent.velocity.magnitude > moveAnimThreshold ||
+            agent.desiredVelocity.magnitude > moveAnimThreshold;
+
+        // 重點：
+        // 只要有路徑還沒到，或正在算路，或有速度，都視為正在走
+        // 這樣遠距離追玩家時不會變成平移
+        bool shouldPlayWalk = hasValidPath || isCalculatingPath || hasVelocity;
+
+        if (shouldPlayWalk)
+        {
+            idleTimer = 0f;
+
+            if (currentState == State.Patrol)
+            {
+                PlayAnim(walk1Anim);
+            }
+            else if (currentState == State.Alert || currentState == State.Chase)
+            {
+                PlayAnim(walk2Anim);
+            }
+
+            return;
+        }
+
+        idleTimer += Time.deltaTime;
+
+        if (idleTimer >= idleDelay)
+        {
+            PlayAnim(idleAnim);
+        }
     }
 
     void FacePlayer()
@@ -440,6 +501,7 @@ public class SoundMonsterAI2 : MonoBehaviour
         if (dir.sqrMagnitude <= 0.001f) return;
 
         Quaternion lookRotation = Quaternion.LookRotation(dir);
+
         transform.rotation = Quaternion.Slerp(
             transform.rotation,
             lookRotation,
@@ -455,6 +517,8 @@ public class SoundMonsterAI2 : MonoBehaviour
 
         currentAnim = animName;
         animator.CrossFade(animName, 0.15f);
+
+        Debug.Log("[ANIM] Play " + animName);
     }
 
     void OnDrawGizmosSelected()
