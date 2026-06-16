@@ -1617,7 +1617,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 3.5
+  m_Speed: 2
   m_Acceleration: 8
   avoidancePriority: 50
   m_AngularSpeed: 120
@@ -1645,13 +1645,13 @@ MonoBehaviour:
   currentState: 0
   patrolSpeed: 2
   alertSpeed: 3
-  chaseSpeed: 6
+  chaseSpeed: 4.5
   patrolRadius: 12
   waypointArriveDistance: 1
   chaseDistance: 30
   disengageDistance: 50
-  attackRange: 1.5
-  attackCooldown: 1.2
+  attackRange: 1.7
+  attackCooldown: 2
   losePlayerAfterNoSound: 1
   chaseKeepIntensity: 3
   chaseTriggerIntensity: 5
