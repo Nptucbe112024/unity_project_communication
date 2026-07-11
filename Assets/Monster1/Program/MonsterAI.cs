@@ -20,6 +20,18 @@ public class MonsterAI : MonoBehaviour
     public NavMeshAgent agent;
     public float rotateSpeed = 8f;
 
+    [Tooltip("實際速度低於這個值時，不播放走路動畫")]
+    public float minimumWalkVelocity = 0.08f;
+
+    [Tooltip("走路動畫原本對應的移動速度，用來計算動畫播放倍率")]
+    public float animationReferenceSpeed = 2f;
+
+    [Tooltip("走路動畫最慢播放倍率")]
+    public float minimumWalkAnimationSpeed = 0.75f;
+
+    [Tooltip("走路動畫最快播放倍率")]
+    public float maximumWalkAnimationSpeed = 1.5f;
+
     [Header("Attack")]
     public float attackCooldown = 1.5f;
     private float attackTimer = 0f;
@@ -35,10 +47,19 @@ public class MonsterAI : MonoBehaviour
 
     private bool isStoppedByLight = false;
 
+    private bool currentIsLit = false;
+    private bool currentIsWalking = false;
+    private bool currentIsAttacking = false;
+
     void Start()
     {
         InitComponents();
         InitAudio();
+
+        if (agent != null)
+        {
+            agent.updateRotation = true;
+        }
     }
 
     void Update()
@@ -50,16 +71,21 @@ public class MonsterAI : MonoBehaviour
         if (isStoppedByLight)
         {
             StopMonsterByLight();
+            UpdateAnimationFromMovement();
             return;
         }
 
         if (!CanSeePlayer())
         {
             Idle();
+            UpdateAnimationFromMovement();
             return;
         }
 
-        float distance = Vector3.Distance(transform.position, player.position);
+        float distance = Vector3.Distance(
+            transform.position,
+            player.position
+        );
 
         if (distance <= attackRange)
         {
@@ -69,6 +95,8 @@ public class MonsterAI : MonoBehaviour
         {
             ChasePlayer();
         }
+
+        UpdateAnimationFromMovement();
     }
 
     void InitComponents()
@@ -81,6 +109,11 @@ public class MonsterAI : MonoBehaviour
         if (animator == null)
         {
             animator = GetComponentInChildren<Animator>();
+        }
+
+        if (animator != null)
+        {
+            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
         }
     }
 
@@ -106,18 +139,29 @@ public class MonsterAI : MonoBehaviour
             return false;
         }
 
-        float distance = Vector3.Distance(transform.position, player.position);
+        float distance = Vector3.Distance(
+            transform.position,
+            player.position
+        );
 
         if (distance > detectRange)
         {
             return false;
         }
 
-        Vector3 origin = transform.position + Vector3.up * 1.5f;
-        Vector3 target = player.position + Vector3.up * 1.0f;
+        Vector3 origin =
+            transform.position + Vector3.up * 1.5f;
+
+        Vector3 target =
+            player.position + Vector3.up * 1.0f;
+
         Vector3 direction = target - origin;
 
-        if (Physics.Raycast(origin, direction.normalized, distance, obstacleLayer))
+        if (Physics.Raycast(
+            origin,
+            direction.normalized,
+            distance,
+            obstacleLayer))
         {
             return false;
         }
@@ -137,16 +181,24 @@ public class MonsterAI : MonoBehaviour
             return false;
         }
 
-        Vector3 monsterPoint = transform.position + Vector3.up * 1.2f;
-        Vector3 directionToMonster = monsterPoint - flashlight.position;
-        float distanceToMonster = directionToMonster.magnitude;
+        Vector3 monsterPoint =
+            transform.position + Vector3.up * 1.2f;
+
+        Vector3 directionToMonster =
+            monsterPoint - flashlight.position;
+
+        float distanceToMonster =
+            directionToMonster.magnitude;
 
         if (distanceToMonster > flashlightLight.range)
         {
             return false;
         }
 
-        float angle = Vector3.Angle(flashlight.forward, directionToMonster);
+        float angle = Vector3.Angle(
+            flashlight.forward,
+            directionToMonster
+        );
 
         if (angle > flashlightStopAngle)
         {
@@ -159,7 +211,8 @@ public class MonsterAI : MonoBehaviour
             out RaycastHit hit,
             distanceToMonster))
         {
-            if (hit.transform != transform && !hit.transform.IsChildOf(transform))
+            if (hit.transform != transform &&
+                !hit.transform.IsChildOf(transform))
             {
                 return false;
             }
@@ -178,31 +231,20 @@ public class MonsterAI : MonoBehaviour
         agent.isStopped = false;
         agent.SetDestination(player.position);
 
-        PlayWalkSound();
-
-        SetAnimation(
-            isLit: false,
-            isWalking: true,
-            isAttacking: false
-        );
+        currentIsLit = false;
+        currentIsAttacking = false;
     }
 
     void AttackPlayer()
     {
-        if (agent != null)
-        {
-            agent.isStopped = true;
-            agent.velocity = Vector3.zero;
-        }
+        StopAgentImmediately();
 
         StopWalkSound();
         FacePlayer();
 
-        SetAnimation(
-            isLit: false,
-            isWalking: false,
-            isAttacking: true
-        );
+        currentIsLit = false;
+        currentIsWalking = false;
+        currentIsAttacking = true;
 
         if (attackTimer <= 0f)
         {
@@ -221,36 +263,118 @@ public class MonsterAI : MonoBehaviour
 
     void StopMonsterByLight()
     {
-        if (agent != null)
-        {
-            agent.isStopped = true;
-            agent.velocity = Vector3.zero;
-        }
-
+        StopAgentImmediately();
         StopWalkSound();
 
-        SetAnimation(
-            isLit: true,
-            isWalking: false,
-            isAttacking: false
-        );
+        currentIsLit = true;
+        currentIsWalking = false;
+        currentIsAttacking = false;
     }
 
     void Idle()
     {
-        if (agent != null)
-        {
-            agent.isStopped = true;
-            agent.velocity = Vector3.zero;
-        }
-
+        StopAgentImmediately();
         StopWalkSound();
 
-        SetAnimation(
-            isLit: false,
-            isWalking: false,
-            isAttacking: false
+        currentIsLit = false;
+        currentIsWalking = false;
+        currentIsAttacking = false;
+    }
+
+    void StopAgentImmediately()
+    {
+        if (agent == null)
+        {
+            return;
+        }
+
+        agent.isStopped = true;
+        agent.velocity = Vector3.zero;
+        agent.ResetPath();
+    }
+
+    void UpdateAnimationFromMovement()
+    {
+        if (animator == null)
+        {
+            return;
+        }
+
+        bool isActuallyMoving = false;
+        float actualSpeed = 0f;
+
+        if (agent != null &&
+            agent.enabled &&
+            agent.isOnNavMesh &&
+            !agent.isStopped)
+        {
+            actualSpeed = agent.velocity.magnitude;
+
+            bool hasPath =
+                agent.hasPath &&
+                !agent.pathPending;
+
+            bool hasDistanceToTravel =
+                agent.remainingDistance >
+                agent.stoppingDistance + 0.05f;
+
+            isActuallyMoving =
+                hasPath &&
+                hasDistanceToTravel &&
+                actualSpeed >= minimumWalkVelocity;
+        }
+
+        if (currentIsLit || currentIsAttacking)
+        {
+            isActuallyMoving = false;
+        }
+
+        currentIsWalking = isActuallyMoving;
+
+        animator.SetBool("IsLit", currentIsLit);
+        animator.SetBool("IsWalking", currentIsWalking);
+        animator.SetBool("IsAttacking", currentIsAttacking);
+
+        UpdateAnimatorPlaybackSpeed(actualSpeed);
+
+        if (currentIsWalking)
+        {
+            PlayWalkSound();
+        }
+        else
+        {
+            StopWalkSound();
+        }
+    }
+
+    void UpdateAnimatorPlaybackSpeed(float actualSpeed)
+    {
+        if (animator == null)
+        {
+            return;
+        }
+
+        if (!currentIsWalking)
+        {
+            animator.speed = 1f;
+            return;
+        }
+
+        float referenceSpeed = Mathf.Max(
+            animationReferenceSpeed,
+            0.01f
         );
+
+        float animationSpeedMultiplier =
+            actualSpeed / referenceSpeed;
+
+        animationSpeedMultiplier = Mathf.Clamp(
+            animationSpeedMultiplier,
+            minimumWalkAnimationSpeed,
+            maximumWalkAnimationSpeed
+        );
+
+        animator.speed = animationSpeedMultiplier;
     }
 
     void FacePlayer()
@@ -260,7 +384,9 @@ public class MonsterAI : MonoBehaviour
             return;
         }
 
-        Vector3 direction = player.position - transform.position;
+        Vector3 direction =
+            player.position - transform.position;
+
         direction.y = 0f;
 
         if (direction.sqrMagnitude < 0.001f)
@@ -268,25 +394,14 @@ public class MonsterAI : MonoBehaviour
             return;
         }
 
-        Quaternion targetRotation = Quaternion.LookRotation(direction);
+        Quaternion targetRotation =
+            Quaternion.LookRotation(direction);
 
         transform.rotation = Quaternion.Slerp(
             transform.rotation,
             targetRotation,
             rotateSpeed * Time.deltaTime
         );
-    }
-
-    void SetAnimation(bool isLit, bool isWalking, bool isAttacking)
-    {
-        if (animator == null)
-        {
-            return;
-        }
-
-        animator.SetBool("IsLit", isLit);
-        animator.SetBool("IsWalking", isWalking);
-        animator.SetBool("IsAttacking", isAttacking);
     }
 
     void PlayWalkSound()
@@ -328,9 +443,15 @@ public class MonsterAI : MonoBehaviour
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, detectRange);
+        Gizmos.DrawWireSphere(
+            transform.position,
+            detectRange
+        );
 
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
+        Gizmos.DrawWireSphere(
+            transform.position,
+            attackRange
+        );
     }
 }
