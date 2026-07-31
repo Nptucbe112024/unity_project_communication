@@ -21,20 +21,33 @@ public class MonsterHearing2 : MonoBehaviour
     {
         if (ai == null) return;
 
-        float threshold = ai.currentState == SoundMonsterAI2.State.Alert
-            ? alertThreshold
-            : patrolThreshold;
+        float threshold = GetCurrentThreshold();
 
         if (intensity >= threshold)
         {
             heardThisFrame = true;
 
+            // 同一幀如果聽到多個聲音，取最強的
             if (intensity > heardIntensity)
             {
                 heardIntensity = intensity;
                 heardPosition = sourcePos;
             }
         }
+    }
+
+    float GetCurrentThreshold()
+    {
+        // Patrol：比較不敏感
+        // Alert / Chase / Attack：比較敏感
+        if (ai.currentState == SoundMonsterAI2.State.Alert ||
+            ai.currentState == SoundMonsterAI2.State.Chase ||
+            ai.currentState == SoundMonsterAI2.State.Attack)
+        {
+            return alertThreshold;
+        }
+
+        return patrolThreshold;
     }
 
     public bool HasHeardSound(out float intensity, out Vector3 pos)

@@ -742,8 +742,8 @@ MonoBehaviour:
   walkIntensity: 10
   sprintIntensity: 25
   crouchInterval: 0.75
-  walkInterval: 0.4
-  sprintInterval: 0.2
+  walkInterval: 0.2
+  sprintInterval: 0.12
   breathInterval: 3
   crouchAction:
     m_Name: Crouch
@@ -1652,7 +1652,7 @@ MonoBehaviour:
   disengageDistance: 50
   attackRange: 1.7
   attackCooldown: 2
-  losePlayerAfterNoSound: 1
+  losePlayerAfterNoSound: 0.2
   chaseKeepIntensity: 3
   chaseTriggerIntensity: 5
   alertTimeout: 3
